@@ -1,0 +1,153 @@
+{
+  "nodes": [
+    {
+      "id": "finding:SAST-002",
+      "label": "Finding",
+      "props": {
+        "severity": "high",
+        "finding_id": "SAST-002",
+        "fp": "d7c9fc992776c5135cee6b9c1eb40634e31142af",
+        "id": "finding:SAST-002",
+        "source": "sast",
+        "title": "SQL query constructed with f-string interpolation passed to cursor.execute()"
+      }
+    },
+    {
+      "id": "fn:create_order",
+      "label": "Function",
+      "props": {
+        "file": "target_app/v1.5.0/main.py",
+        "line": 76,
+        "name": "create_order",
+        "id": "fn:create_order"
+      }
+    },
+    {
+      "id": "route:/api/orders",
+      "label": "Route",
+      "props": {
+        "path": "/api/orders",
+        "id": "route:/api/orders"
+      }
+    },
+    {
+      "id": "table:orders",
+      "label": "Table",
+      "props": {
+        "name": "orders",
+        "sensitivity": "none",
+        "id": "table:orders"
+      }
+    },
+    {
+      "id": "dbrole:app_rw",
+      "label": "DBRole",
+      "props": {
+        "name": "app_rw",
+        "id": "dbrole:app_rw"
+      }
+    },
+    {
+      "id": "table:schema_version",
+      "label": "Table",
+      "props": {
+        "name": "schema_version",
+        "id": "table:schema_version",
+        "sensitivity": "none"
+      }
+    },
+    {
+      "id": "table:inventory",
+      "label": "Table",
+      "props": {
+        "name": "inventory",
+        "sensitivity": "none",
+        "id": "table:inventory"
+      }
+    },
+    {
+      "id": "table:products",
+      "label": "Table",
+      "props": {
+        "name": "products",
+        "sensitivity": "none",
+        "id": "table:products"
+      }
+    },
+    {
+      "id": "table:payments",
+      "label": "Table",
+      "props": {
+        "name": "payments",
+        "sensitivity": "financial",
+        "id": "table:payments"
+      }
+    },
+    {
+      "id": "table:customers",
+      "label": "Table",
+      "props": {
+        "name": "customers",
+        "sensitivity": "pii",
+        "id": "table:customers"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "finding:SAST-002",
+      "to": "fn:create_order",
+      "type": "LOCATED_IN"
+    },
+    {
+      "from": "route:/api/orders",
+      "to": "fn:create_order",
+      "type": "HANDLED_BY"
+    },
+    {
+      "from": "fn:create_order",
+      "to": "table:orders",
+      "type": "WRITES"
+    },
+    {
+      "from": "dbrole:app_rw",
+      "to": "table:schema_version",
+      "type": "CAN_READ"
+    },
+    {
+      "from": "dbrole:app_rw",
+      "to": "table:inventory",
+      "type": "CAN_READ"
+    },
+    {
+      "from": "dbrole:app_rw",
+      "to": "table:orders",
+      "type": "CAN_READ"
+    },
+    {
+      "from": "dbrole:app_rw",
+      "to": "table:products",
+      "type": "CAN_READ"
+    },
+    {
+      "from": "dbrole:app_rw",
+      "to": "table:payments",
+      "type": "CAN_READ"
+    },
+    {
+      "from": "dbrole:app_rw",
+      "to": "table:customers",
+      "type": "CAN_READ"
+    },
+    {
+      "from": "fn:create_order",
+      "to": "table:products",
+      "type": "READS"
+    },
+    {
+      "from": "fn:create_order",
+      "to": "table:inventory",
+      "type": "READS"
+    }
+  ]
+}
