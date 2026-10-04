@@ -292,21 +292,26 @@ export function App() {
                 <span className="text-xs text-zinc-500 font-mono">1-second streaming Task-Manager buffer</span>
               </div>
 
-              {/* Telemetry Chart Component */}
-              <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-5">
-                <MetricsChart
-                  metrics={metrics}
-                  selectedRoute="/api/orders|all"
-                  markerText={markerText}
-                  onInvestigate={handleInvestigate}
-                />
-              </div>
+              {/* Side-by-Side: Task Manager Telemetry Chart & Multi-API Health Table */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+                {/* Telemetry Chart Component */}
+                <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-5 flex flex-col">
+                  <MetricsChart
+                    metrics={metrics}
+                    selectedRoute="/api/orders|all"
+                    markerText={markerText}
+                    onInvestigate={handleInvestigate}
+                  />
+                </div>
 
-              {/* Multi-API Percentiles & Failure Status Table */}
-              <ApiMetricsTable
-                metrics={metrics}
-                onInvestigateRoute={() => handleInvestigate()}
-              />
+                {/* Multi-API Percentiles & Failure Status Table */}
+                <div className="flex flex-col">
+                  <ApiMetricsTable
+                    metrics={metrics}
+                    onInvestigateRoute={() => handleInvestigate()}
+                  />
+                </div>
+              </div>
             </section>
 
             {/* ================= STEP 2: SECURITY & MULTI-VERSION SCANS ================= */}
