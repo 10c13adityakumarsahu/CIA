@@ -131,12 +131,10 @@ check-s6:
 	@echo "--- check-s6: agent, report verification & replay ---"
 	@python -m pytest tests/test_stage6.py -v && echo OK
 
-# S7: scenario b_regression produces verdict=regression.
+# S7: UI build, fixtures, mock server & replay flows.
 check-s7:
-	@echo "--- check-s7: scenario b_regression verdict ---"
-	@curl -sf http://localhost:9000/api/scenario/b_regression/start -X POST && \
-	  echo "Scenario started – check /api/investigate stream for verdict" || \
-	  (echo FAIL && exit 1)
+	@echo "--- check-s7: UI build, mock server & replay flows ---"
+	@python -m pytest tests/test_stage7.py -v && echo OK
 
 # S8: UI loads at :5173.
 check-s8:

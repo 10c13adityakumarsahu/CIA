@@ -147,6 +147,8 @@ def test_executor_and_undo():
     """Executor must change weights, add block rules, and restore previous state on undo."""
     executor = Executor("http://localhost:8080")
 
+    initial_weights = requests.get("http://localhost:8080/admin/state").json()["weights"]
+
     # 1. Test canary shift and undo
     exec_shift = executor.execute("canary_shift", {"blue": 20, "green": 80})
     act_id = exec_shift["action_id"]
@@ -158,7 +160,7 @@ def test_executor_and_undo():
     undo_res = executor.undo(act_id)
     assert undo_res["status"] == "undone"
     state_restored = requests.get("http://localhost:8080/admin/state").json()
-    assert state_restored["weights"] == {"blue": 50, "green": 50}
+    assert state_restored["weights"] == initial_weights
 
     # 2. Test block rule and undo
     exec_rule = executor.execute("block_rule", {"route": "/api/orders", "field": "sku", "regex": "TEST_BLOCKED_SKU"})

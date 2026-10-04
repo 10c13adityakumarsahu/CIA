@@ -188,11 +188,13 @@ def preview_mitigation(payload: Dict[str, Any]):
         ]
     }
 
+import time
+
 @app.post("/api/mitigation/execute")
 def execute_mitigation(payload: Dict[str, Any]):
     action = payload.get("action", "")
     params = payload.get("params", {})
-    mit_id = f"mit-{int(asyncio.get_event_loop().time()) if hasattr(asyncio, 'get_event_loop') else 101}"
+    mit_id = f"mit-{int(time.time())}"
     mock_state["mitigation_state"]["status"] = "executed"
     mock_state["mitigation_state"]["last_action"] = action
     return {
