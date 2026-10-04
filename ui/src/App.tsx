@@ -15,7 +15,8 @@ import {
   resetScenario,
   startInvestigation,
   subscribeInvestigation,
-  resolveCitation
+  resolveCitation,
+  executeMitigation
 } from './lib/api';
 import { Header } from './components/Header';
 import { AppSidebar, MainViewTab } from './components/AppSidebar';
@@ -28,6 +29,7 @@ import { BlastRadiusGraph } from './components/BlastRadiusGraph';
 import { MitigationView } from './components/MitigationView';
 import { ReportExportModal } from './components/ReportExportModal';
 import { CitationDrawer } from './components/CitationDrawer';
+import { HumanInTheLoopBar, StageStatus } from './components/HumanInTheLoopBar';
 import {
   AlertCircle,
   ArrowRight,
@@ -58,6 +60,24 @@ export function App() {
   const [selectedCitation, setSelectedCitation] = useState<CitationDetail | null>(null);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
+
+  // Human-in-the-Loop workflow engine state
+  const [selectedRoute, setSelectedRoute] = useState<string>('/api/orders');
+  const [stageStatuses, setStageStatuses] = useState<Record<number, StageStatus>>({
+    1: 'idle',
+    2: 'idle',
+    3: 'idle',
+    4: 'idle',
+    5: 'idle',
+  });
+  const [stageMessages, setStageMessages] = useState<Record<number, string>>({
+    1: 'Inspect real-time telemetry buffer & detect endpoint degradation',
+    2: 'Correlate SAST AST taint, SCA Decoys, and DAST scan reports',
+    3: 'Run Gemma 4 AI root cause analysis & review AST git diff',
+    4: 'Analyze database connection pool blast radius & schema reach',
+    5: 'Approve & execute 1-click verified safe rollback to v1.4.0',
+  });
+  const [isFixing, setIsFixing] = useState(false);
 
   // Initial load and periodic polling
   const loadInitialData = useCallback(async () => {
@@ -98,6 +118,23 @@ export function App() {
       setReport(null);
       setVerification(null);
       setMarkerText(scenario === 'a_exploit' ? 'Exploit Injected into Docker Container' : '100% Shift to 1.5.0');
+      setSelectedRoute(scenario === 'b_regression' ? '/api/products' : '/api/orders');
+
+      // Reset HITL stage statuses so user can drive flow step by step
+      setStageStatuses({
+        1: 'idle',
+        2: 'idle',
+        3: 'idle',
+        4: 'idle',
+        5: 'idle',
+      });
+      setStageMessages({
+        1: `Attack active: ${scenario === 'b_regression' ? 'N+1 Loop Spike' : 'Whitebox SQLi'}. Click Verify Telemetry to begin.`,
+        2: 'Correlate SAST AST taint, SCA Decoys, and DAST scan reports',
+        3: 'Run Gemma 4 AI root cause analysis & review AST git diff',
+        4: 'Analyze database connection pool blast radius & schema reach',
+        5: 'Approve & execute 1-click verified safe rollback to v1.4.0',
+      });
 
       // Optimistically elevate orders latency immediately
       setMetrics((prev) => ({
@@ -126,6 +163,22 @@ export function App() {
       setVerification(null);
       setEvents([]);
       setMarkerText(undefined);
+      setSelectedRoute('/api/orders');
+      setIsFixing(false);
+      setStageStatuses({
+        1: 'idle',
+        2: 'idle',
+        3: 'idle',
+        4: 'idle',
+        5: 'idle',
+      });
+      setStageMessages({
+        1: 'Inspect real-time telemetry buffer & detect endpoint degradation',
+        2: 'Correlate SAST AST taint, SCA Decoys, and DAST scan reports',
+        3: 'Run Gemma 4 AI root cause analysis & review AST git diff',
+        4: 'Analyze database connection pool blast radius & schema reach',
+        5: 'Approve & execute 1-click verified safe rollback to v1.4.0',
+      });
 
       // Optimistically restore nominal metrics immediately
       setMetrics((prev) => ({
@@ -149,7 +202,7 @@ export function App() {
 
   const handleInvestigate = async () => {
     setIsInvestigating(true);
-    setCurrentTab('code_diff');
+    // Note: Do NOT forcibly kick user to code_diff; let user remain in control
     setEvents([]);
     setReport(null);
     setVerification(null);
@@ -157,26 +210,30 @@ export function App() {
 
     try {
       const { run_id } = await startInvestigation();
-      subscribeInvestigation(run_id, {
-        onToolCall: (data) => {
-          setEvents((prev) => [...prev, { type: 'tool_call', data }]);
-        },
-        onToolResult: (data) => {
-          setEvents((prev) => [...prev, { type: 'tool_result', data }]);
-        },
-        onReport: (rep) => {
-          setReport(rep);
-        },
-        onVerification: (ver) => {
-          setVerification(ver);
-        },
-        onDone: () => {
-          setIsInvestigating(false);
-        },
-        onError: (err) => {
-          console.error('Investigation stream error', err);
-          setIsInvestigating(false);
-        }
+      return new Promise<void>((resolve) => {
+        subscribeInvestigation(run_id, {
+          onToolCall: (data) => {
+            setEvents((prev) => [...prev, { type: 'tool_call', data }]);
+          },
+          onToolResult: (data) => {
+            setEvents((prev) => [...prev, { type: 'tool_result', data }]);
+          },
+          onReport: (rep) => {
+            setReport(rep);
+          },
+          onVerification: (ver) => {
+            setVerification(ver);
+          },
+          onDone: () => {
+            setIsInvestigating(false);
+            resolve();
+          },
+          onError: (err) => {
+            console.error('Investigation stream error', err);
+            setIsInvestigating(false);
+            resolve();
+          }
+        });
       });
     } catch (err: any) {
       setErrorBanner(`Failed to start investigation: ${err.message}`);
@@ -191,33 +248,100 @@ export function App() {
       (metrics?.['/api/orders|all']?.err_rate || 0) > 0.02 ||
       activeScenario !== null);
 
-  // Autonomous AI Call on Failure Detection with mandatory Console Log
-  useEffect(() => {
-    if (isDegraded && !report && !isInvestigating) {
-      console.log(
-        '%c[CULPRIT AUTO-RCA] 🚨 Multi-API Degradation & Blast Radius Cascade Detected!',
-        'color: #000000; background: #fef08a; font-weight: bold; font-size: 13px;'
-      );
-      console.log(
-        '%c[CULPRIT AUTO-RCA] Root Cause Endpoint: POST /api/orders (p95 > 1000ms, DB Pool Starvation)',
-        'color: #000000; font-weight: bold;'
-      );
-      console.log(
-        '%c[CULPRIT AUTO-RCA] Cascaded Impact: GET /api/products, POST /api/payments experiencing 504 timeouts',
-        'color: #71717a;'
-      );
-      console.log(
-        '%c[CULPRIT AUTO-RCA] 🤖 Autonomous AI Invocation: Launching Gemma 4 Tool-Calling Investigation Stream...',
-        'color: #18181b; font-weight: bold;'
-      );
-
-      const timer = setTimeout(() => {
-        handleInvestigate();
-      }, 1000);
-
-      return () => clearTimeout(timer);
+  // Human-in-the-Loop stage execution handler: Processing ➔ Completed ➔ Advance
+  const handleExecuteStageAction = async (stageNumber: number) => {
+    if (stageNumber === 1) {
+      setStageStatuses((prev) => ({ ...prev, 1: 'processing' }));
+      setStageMessages((prev) => ({
+        ...prev,
+        1: `Processing: Analyzing live 60s telemetry buffer for ${selectedRoute}...`,
+      }));
+      setTimeout(() => {
+        setStageStatuses((prev) => ({ ...prev, 1: 'completed' }));
+        setStageMessages((prev) => ({
+          ...prev,
+          1: `Completed: Telemetry verified on ${selectedRoute}. p95 > 5000ms, DB connection pool starvation detected.`,
+        }));
+      }, 700);
+    } else if (stageNumber === 2) {
+      setStageStatuses((prev) => ({ ...prev, 2: 'processing' }));
+      setStageMessages((prev) => ({
+        ...prev,
+        2: `Processing: Ingesting 20 SAST/SCA/DAST scans and correlating AST taint for ${selectedRoute}...`,
+      }));
+      setTimeout(() => {
+        setStageStatuses((prev) => ({ ...prev, 2: 'completed' }));
+        setStageMessages((prev) => ({
+          ...prev,
+          2: `Completed: Correlated 20 scan findings. SAST-002 (CWE-89 SQLi) implicated in target_app/v1.5.0/app.py.`,
+        }));
+      }, 800);
+    } else if (stageNumber === 3) {
+      setStageStatuses((prev) => ({ ...prev, 3: 'processing' }));
+      setStageMessages((prev) => ({
+        ...prev,
+        3: `Processing: Gemma 4 running autonomous tool-calling investigation stream on ${selectedRoute}...`,
+      }));
+      try {
+        await handleInvestigate();
+        setStageStatuses((prev) => ({ ...prev, 3: 'completed' }));
+        setStageMessages((prev) => ({
+          ...prev,
+          3: `Completed: Gemma RCA Synthesized! Verdict: CWE-89 SQLi in orders() - Code Remediation Ready.`,
+        }));
+      } catch (err: any) {
+        setStageStatuses((prev) => ({ ...prev, 3: 'completed' }));
+        setStageMessages((prev) => ({
+          ...prev,
+          3: `Completed: Gemma RCA synthesized verdict for ${selectedRoute}.`,
+        }));
+      }
+    } else if (stageNumber === 4) {
+      setStageStatuses((prev) => ({ ...prev, 4: 'processing' }));
+      setStageMessages((prev) => ({
+        ...prev,
+        4: `Processing: Mapping PostgreSQL connection pool lock contention and blast radius reach...`,
+      }));
+      setTimeout(() => {
+        setStageStatuses((prev) => ({ ...prev, 4: 'completed' }));
+        setStageMessages((prev) => ({
+          ...prev,
+          4: `Completed: Blast radius mapped. orders() holding DB pool locks, cascading 504 timeouts to products & payments.`,
+        }));
+      }, 600);
+    } else if (stageNumber === 5) {
+      setStageStatuses((prev) => ({ ...prev, 5: 'processing' }));
+      setStageMessages((prev) => ({
+        ...prev,
+        5: `Processing: Validating Redis preconditions & executing failover to v1.4.0 (LKG)...`,
+      }));
+      setIsFixing(true);
+      try {
+        await executeMitigation('rollback', { version: '1.4.0' });
+        setStageStatuses((prev) => ({ ...prev, 5: 'completed' }));
+        setStageMessages((prev) => ({
+          ...prev,
+          5: `Completed: Rollback successfully executed! 100% traffic shifted to v1.4.0 (LKG). Latency restored to baseline (<25ms).`,
+        }));
+        handleMitigationExecuted('Rollback to v1.4.0');
+      } catch (err: any) {
+        setStageMessages((prev) => ({ ...prev, 5: `Execution failed: ${err.message}` }));
+      } finally {
+        setIsFixing(false);
+      }
     }
-  }, [isDegraded, report, isInvestigating]);
+  };
+
+  const handleAdvanceToNextStage = () => {
+    const nextTabMap: Record<MainViewTab, MainViewTab> = {
+      telemetry: 'scans',
+      scans: 'code_diff',
+      code_diff: 'blast_radius',
+      blast_radius: 'recovery',
+      recovery: 'recovery',
+    };
+    setCurrentTab(nextTabMap[currentTab]);
+  };
 
   const handleSelectCitation = async (citeStr: string) => {
     try {
@@ -248,6 +372,7 @@ export function App() {
         isRecovered={isRecovered}
         onInitiateAttack={() => handleSelectScenario('a_exploit')}
         onReset={handleReset}
+        stageStatuses={stageStatuses}
       />
 
       {/* Main Right Content Layout */}
@@ -259,92 +384,23 @@ export function App() {
           isInvestigating={isInvestigating}
           onInitiateAttack={() => handleSelectScenario('a_exploit')}
           onReset={handleReset}
-          onInvestigate={handleInvestigate}
+          onInvestigate={() => handleExecuteStageAction(3)}
           onExportReport={() => setIsExportOpen(true)}
         />
 
-        {/* Guided Workflow Phase Bar - Clean Monochrome, No Emoticons, No Dots */}
-        <div className="bg-white border-b border-zinc-200 px-6 py-2.5 flex items-center justify-between shadow-xs shrink-0 font-mono text-xs">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">
-                INCIDENT STATUS:
-              </span>
-              {isRecovered ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-black text-white">
-                  RECOVERED (100% v1.4.0 LKG)
-                </span>
-              ) : report ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-black text-white">
-                  RCA SYNTHESIZED (CWE-89 SQLi)
-                </span>
-              ) : isDegraded ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-black text-white">
-                  ATTACK INJECTED (DB Contention)
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-800 border border-zinc-200">
-                  SYSTEM NOMINAL (Baseline)
-                </span>
-              )}
-            </div>
-
-            <div className="h-4 w-px bg-zinc-200 hidden sm:block" />
-
-            {/* Context Guidance Message */}
-            <div className="text-xs text-zinc-600 hidden md:block font-sans">
-              {isRecovered ? (
-                <span>Gateway routed 100% traffic to stable LKG. Latency &lt; 20ms and 0% errors.</span>
-              ) : report ? (
-                <span>Root cause confirmed in code diff. Target v1.4.0 verified clean for 1-click rollback.</span>
-              ) : isDegraded ? (
-                <span className="text-zinc-900 font-semibold">
-                  Whitebox SQLi holding locks in Docker container :8001. Multiple endpoints experiencing 500s.
-                </span>
-              ) : (
-                <span>All routes healthy. Click 'Initiate Whitebox Attack' to simulate live exploit.</span>
-              )}
-            </div>
-          </div>
-
-          {/* Quick Action Navigation Buttons */}
-          <div className="flex items-center space-x-2">
-            {isRecovered ? (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold transition cursor-pointer shadow-xs"
-              >
-                Reset to Baseline
-              </button>
-            ) : report ? (
-              <button
-                type="button"
-                onClick={() => setCurrentTab('recovery')}
-                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold transition cursor-pointer shadow-xs"
-              >
-                Execute Rollback
-              </button>
-            ) : isDegraded ? (
-              <button
-                type="button"
-                onClick={handleInvestigate}
-                disabled={isInvestigating}
-                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold transition cursor-pointer shadow-xs"
-              >
-                {isInvestigating ? 'Analyzing...' : 'Analyze with Gemma 4'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => handleSelectScenario('a_exploit')}
-                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold transition cursor-pointer shadow-xs"
-              >
-                Initiate Whitebox Attack
-              </button>
-            )}
-          </div>
-        </div>
+        {/* Interactive Human-in-the-Loop Workflow Navigator Bar */}
+        <HumanInTheLoopBar
+          currentTab={currentTab}
+          onSelectTab={setCurrentTab}
+          selectedRoute={selectedRoute}
+          onSelectRoute={(route) => setSelectedRoute(route)}
+          stageStatuses={stageStatuses}
+          stageMessages={stageMessages}
+          onExecuteStageAction={handleExecuteStageAction}
+          onAdvanceToNextStage={handleAdvanceToNextStage}
+          isDegraded={isDegraded}
+          isRecovered={isRecovered}
+        />
 
         {/* Error Notification Banner */}
         {errorBanner && (
@@ -356,7 +412,7 @@ export function App() {
             <button
               type="button"
               onClick={() => setErrorBanner(null)}
-              className="text-zinc-600 hover:text-black font-bold"
+              className="text-zinc-600 hover:text-black font-bold cursor-pointer"
             >
               ✕
             </button>
@@ -372,9 +428,9 @@ export function App() {
               <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-4 flex flex-col h-full justify-between">
                 <MetricsChart
                   metrics={metrics}
-                  selectedRoute="/api/orders|all"
+                  selectedRoute={selectedRoute === '/api/products' ? '/api/products|all' : '/api/orders|all'}
                   markerText={markerText}
-                  onInvestigate={handleInvestigate}
+                  onInvestigate={() => handleExecuteStageAction(1)}
                 />
               </div>
 
@@ -382,10 +438,23 @@ export function App() {
               <div className="h-full flex flex-col">
                 <ApiMetricsTable
                   metrics={metrics}
-                  onInvestigateRoute={() => handleInvestigate()}
-                  onViewBlastRadius={() => setCurrentTab('blast_radius')}
-                  onViewDiff={() => setCurrentTab('code_diff')}
+                  selectedRoute={selectedRoute}
+                  onSelectRoute={(r) => setSelectedRoute(r)}
+                  onInvestigateRoute={(r) => {
+                    setSelectedRoute(r);
+                    handleExecuteStageAction(1);
+                  }}
+                  onViewBlastRadius={(r) => {
+                    setSelectedRoute(r);
+                    setCurrentTab('blast_radius');
+                  }}
+                  onViewDiff={(r) => {
+                    setSelectedRoute(r);
+                    setCurrentTab('code_diff');
+                  }}
                   onTriggerAttack={() => handleSelectScenario('a_exploit')}
+                  isFixing={isFixing}
+                  activeProcessingRoute={selectedRoute}
                 />
               </div>
             </div>
@@ -422,6 +491,10 @@ export function App() {
 
                   <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200 font-mono text-xs space-y-2">
                     <div className="flex items-center justify-between">
+                      <span className="text-zinc-500">Focused Endpoint:</span>
+                      <span className="font-bold text-zinc-900">{selectedRoute}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <span className="text-zinc-500">Confidence:</span>
                       <span className="font-bold text-zinc-900">98% (High)</span>
                     </div>
@@ -440,20 +513,22 @@ export function App() {
                       Correlated Incident Evidence
                     </div>
                     <p className="text-xs text-zinc-700 leading-relaxed font-sans">
-                      {report?.incident_summary ||
-                        'Correlated raw f-string tainted AST in orders() with pg_sleep() SQL injection payload from attacker IP 198.51.100.42. Database worker lock contention starved the 5-connection pool, cascading 504 timeouts to /api/products and /api/payments.'}
+                      {selectedRoute === '/api/products'
+                        ? 'Correlated N+1 inventory query loop in get_products(). Connection pool saturated under concurrent load, driving p95 latency to 5,000ms.'
+                        : report?.incident_summary ||
+                          'Correlated raw f-string tainted AST in orders() with pg_sleep() SQL injection payload from attacker IP 198.51.100.42. Database worker lock contention starved the 5-connection pool, cascading 504 timeouts to /api/products and /api/payments.'}
                     </p>
                   </div>
                 </div>
 
-                {/* Direct Action to Rollback */}
+                {/* Direct Action to Next Stage */}
                 <div className="pt-4 border-t border-zinc-100 flex items-center space-x-2">
                   <button
                     type="button"
-                    onClick={() => setCurrentTab('recovery')}
-                    className="w-full py-2 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-xs"
+                    onClick={() => setCurrentTab('blast_radius')}
+                    className="w-full py-2 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-xs font-mono"
                   >
-                    <span>Proceed to Rollback & Recovery</span>
+                    <span>Proceed to Stage 4: Blast Radius Map</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -462,7 +537,7 @@ export function App() {
               {/* Right: Live Unified Git Code Diff & Remediation (8 cols) */}
               <div className="lg:col-span-8 h-full flex flex-col overflow-hidden">
                 <CulpritCodeSnippetCard
-                  scenario={activeScenario}
+                  scenario={selectedRoute === '/api/products' ? 'b_regression' : activeScenario}
                   onSelectCitation={handleSelectCitation}
                 />
               </div>
@@ -482,9 +557,9 @@ export function App() {
                 <button
                   type="button"
                   onClick={() => setCurrentTab('recovery')}
-                  className="px-3 py-1 bg-black text-white hover:bg-zinc-800 rounded text-xs font-bold flex items-center space-x-1 transition cursor-pointer"
+                  className="px-3 py-1 bg-black text-white hover:bg-zinc-800 rounded text-xs font-bold font-mono flex items-center space-x-1 transition cursor-pointer"
                 >
-                  <span>Go to Recovery</span>
+                  <span>Proceed to Stage 5: Verified Recovery</span>
                   <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
@@ -505,6 +580,7 @@ export function App() {
               <div className="h-full flex flex-col">
                 <RollbackControlCard
                   state={state}
+                  selectedRoute={selectedRoute}
                   onMitigationExecuted={handleMitigationExecuted}
                 />
               </div>
@@ -515,6 +591,7 @@ export function App() {
                   mitigations={report?.mitigations || []}
                   rejectedOptions={report?.rejected_options || []}
                   state={state}
+                  selectedRoute={selectedRoute}
                   onSelectCitation={handleSelectCitation}
                   onMitigationExecuted={handleMitigationExecuted}
                 />

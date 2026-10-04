@@ -21,11 +21,14 @@ import { cn } from '../lib/utils';
 
 interface ApiMetricsTableProps {
   metrics: Record<string, RouteMetrics> | null;
+  selectedRoute?: string;
   onSelectRoute?: (route: string) => void;
   onInvestigateRoute?: (route: string) => void;
   onViewBlastRadius?: (route: string) => void;
   onViewDiff?: (route: string) => void;
   onTriggerAttack?: (route: string) => void;
+  isFixing?: boolean;
+  activeProcessingRoute?: string | null;
 }
 
 interface EndpointRow {
@@ -46,11 +49,14 @@ interface EndpointRow {
 
 export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
   metrics,
+  selectedRoute = '/api/orders',
   onSelectRoute,
   onInvestigateRoute,
   onViewBlastRadius,
   onViewDiff,
-  onTriggerAttack
+  onTriggerAttack,
+  isFixing = false,
+  activeProcessingRoute = null
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'degraded_failing' | 'healthy'>('all');
@@ -261,13 +267,20 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
             <tbody className="divide-y divide-zinc-100 font-mono text-[11px]">
               {filteredRows.map((row) => {
                 const isDegraded = row.status === 'degraded' || row.status === 'failing';
+                const isSelected = row.route === selectedRoute;
+                const isCurrentlyFixing = isFixing && activeProcessingRoute === row.route;
 
                 return (
                   <tr
                     key={row.route}
+                    onClick={() => onSelectRoute?.(row.route)}
                     className={cn(
-                      'transition-colors hover:bg-zinc-50/80',
-                      isDegraded ? 'bg-zinc-50/60' : ''
+                      'transition-colors cursor-pointer',
+                      isSelected
+                        ? 'bg-zinc-100 ring-1 ring-zinc-300 font-semibold'
+                        : isDegraded
+                        ? 'bg-zinc-50/70 hover:bg-zinc-100/60'
+                        : 'hover:bg-zinc-50/80'
                     )}
                   >
                     {/* Endpoint Name */}
@@ -282,6 +295,11 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                             {row.route === '/api/orders' && isDegraded && (
                               <span className="text-[9px] font-sans px-1 py-0.2 rounded bg-black text-white font-bold">
                                 Exploit Point
+                              </span>
+                            )}
+                            {row.route === '/api/products' && isDegraded && (
+                              <span className="text-[9px] font-sans px-1 py-0.2 rounded bg-zinc-800 text-white font-semibold">
+                                Pool Starved
                               </span>
                             )}
                           </div>
@@ -334,22 +352,31 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
 
                     {/* Direct Actions from API End */}
                     <td className="py-2 px-3 text-right">
-                      <div className="flex items-center justify-end space-x-1">
-                        {isDegraded ? (
+                      <div className="flex items-center justify-end space-x-1" onClick={(e) => e.stopPropagation()}>
+                        {isCurrentlyFixing ? (
+                          <span className="px-2 py-0.5 rounded bg-black text-white font-sans text-[10px] font-bold shadow-xs animate-pulse">
+                            Fixing...
+                          </span>
+                        ) : isDegraded ? (
                           <>
                             <button
                               type="button"
-                              onClick={() => onInvestigateRoute?.(row.route)}
-                              className="px-2 py-0.5 rounded bg-black hover:bg-zinc-800 text-white font-sans text-[10px] font-bold shadow-xs transition flex items-center space-x-1 cursor-pointer"
-                              title="Run autonomous Gemma RCA on this route"
+                              onClick={() => {
+                                onSelectRoute?.(row.route);
+                                onInvestigateRoute?.(row.route);
+                              }}
+                              className="px-2 py-0.5 rounded bg-black hover:bg-zinc-800 text-white font-sans text-[10px] font-bold shadow-xs transition cursor-pointer"
+                              title="Drive human-in-the-loop investigation on this route"
                             >
-                              <Zap className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                              <span>Analyze</span>
+                              Drive Flow
                             </button>
                             {onViewBlastRadius && (
                               <button
                                 type="button"
-                                onClick={() => onViewBlastRadius(row.route)}
+                                onClick={() => {
+                                  onSelectRoute?.(row.route);
+                                  onViewBlastRadius(row.route);
+                                }}
                                 className="px-1.5 py-0.5 rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-800 font-sans text-[10px] font-semibold transition cursor-pointer"
                                 title="Inspect blast radius cascade map"
                               >
@@ -363,17 +390,19 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                               <button
                                 type="button"
                                 onClick={() => onTriggerAttack(row.route)}
-                                className="px-2 py-0.5 rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-800 font-sans text-[10px] font-bold transition flex items-center space-x-1 cursor-pointer"
+                                className="px-2 py-0.5 rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-800 font-sans text-[10px] font-bold transition cursor-pointer"
                                 title="Initiate whitebox attack against this route"
                               >
-                                <Zap className="w-2.5 h-2.5 text-amber-500" />
-                                <span>Attack</span>
+                                Attack
                               </button>
                             )}
                             {onViewDiff && (
                               <button
                                 type="button"
-                                onClick={() => onViewDiff(row.route)}
+                                onClick={() => {
+                                  onSelectRoute?.(row.route);
+                                  onViewDiff(row.route);
+                                }}
                                 className="px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 font-sans text-[10px] transition cursor-pointer"
                                 title="View code diff"
                               >

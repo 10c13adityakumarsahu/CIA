@@ -18,15 +18,15 @@ interface BlastRadiusGraphProps {
 export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius, onSelectCitation }) => {
   const { nodes, edges } = useMemo(() => {
     const defaultNodes: Array<{ id: string; label: string; type: string; impact: NodeImpact; pos: [number, number]; cite?: string }> = [
-      { id: 'gw', label: 'Gateway (:8080)', type: 'gateway', impact: 'none', pos: [50, 150] },
-      { id: 'r_orders', label: 'Route: /api/orders', type: 'route', impact: 'confirmed', pos: [260, 60], cite: 'LOG-0001' },
-      { id: 'r_products', label: 'Route: /api/products', type: 'route', impact: 'likely', pos: [260, 240] },
-      { id: 'fn_orders', label: 'Func: orders()', type: 'func', impact: 'confirmed', pos: [480, 60], cite: 'FILE:target_app/v1.5.0/app.py:53' },
-      { id: 'pool', label: 'Pool: Postgres (max=5)', type: 'pool', impact: 'confirmed', pos: [480, 240] },
-      { id: 'db_customers', label: 'Table: customers (PII)', type: 'table', impact: 'possible', pos: [720, 40], cite: 'GRAPH:table:customers' },
-      { id: 'db_payments', label: 'Table: payments (Financial)', type: 'table', impact: 'possible', pos: [720, 140], cite: 'GRAPH:table:payments' },
-      { id: 'db_inventory', label: 'Table: inventory', type: 'table', impact: 'likely', pos: [720, 240] },
-      { id: 'db_orders', label: 'Table: orders', type: 'table', impact: 'confirmed', pos: [720, 340] },
+      { id: 'gw', label: 'Gateway (:8080)', type: 'gateway', impact: 'none', pos: [40, 240] },
+      { id: 'r_orders', label: 'Route: /api/orders', type: 'route', impact: 'confirmed', pos: [320, 100], cite: 'LOG-0001' },
+      { id: 'r_products', label: 'Route: /api/products', type: 'route', impact: 'likely', pos: [320, 380] },
+      { id: 'fn_orders', label: 'Func: orders()', type: 'func', impact: 'confirmed', pos: [640, 100], cite: 'FILE:target_app/v1.5.0/app.py:53' },
+      { id: 'pool', label: 'Pool: Postgres (max=5)', type: 'pool', impact: 'confirmed', pos: [640, 380] },
+      { id: 'db_customers', label: 'Table: customers (PII)', type: 'table', impact: 'possible', pos: [960, 40], cite: 'GRAPH:table:customers' },
+      { id: 'db_payments', label: 'Table: payments (Financial)', type: 'table', impact: 'possible', pos: [960, 180], cite: 'GRAPH:table:payments' },
+      { id: 'db_inventory', label: 'Table: inventory', type: 'table', impact: 'likely', pos: [960, 320] },
+      { id: 'db_orders', label: 'Table: orders', type: 'table', impact: 'confirmed', pos: [960, 460] },
     ];
 
     // Helper for impact styling (clean monochrome)
@@ -112,6 +112,9 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
         nodes={nodes}
         edges={edges}
         fitView
+        fitViewOptions={{ padding: 0.2, includeHiddenNodes: false }}
+        minZoom={0.4}
+        maxZoom={1.2}
         nodesDraggable={true}
         className="bg-[#FAFAFA]"
       >

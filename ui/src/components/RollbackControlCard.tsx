@@ -17,11 +17,13 @@ import { cn } from '../lib/utils';
 
 interface RollbackControlCardProps {
   state: GatewayState | null;
+  selectedRoute?: string;
   onMitigationExecuted?: (action: string) => void;
 }
 
 export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
   state,
+  selectedRoute = '/api/orders',
   onMitigationExecuted
 }) => {
   const [isExecuting, setIsExecuting] = useState(false);
@@ -122,6 +124,21 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
             <div className={cn('text-[10px] uppercase', isRolledBack ? 'text-zinc-300' : 'text-zinc-500')}>Target (LKG Stable)</div>
             <div className={cn('text-sm font-bold mt-1', isRolledBack ? 'text-white' : 'text-zinc-900')}>v1.4.0 (Green)</div>
             <div className={cn('text-[11px] mt-0.5', isRolledBack ? 'text-zinc-300' : 'text-zinc-600')}>Weight: {greenWeight}%</div>
+          </div>
+        </div>
+
+        {/* Contextual Endpoint Remediation Scope */}
+        <div className="p-2.5 rounded bg-zinc-50 border border-zinc-200 font-mono text-xs">
+          <div className="text-[10px] text-zinc-500 uppercase font-bold flex items-center justify-between">
+            <span>Target Remediation Scope:</span>
+            <span className="text-zinc-900 bg-zinc-200 px-1 rounded">{selectedRoute}</span>
+          </div>
+          <div className="text-[11px] text-zinc-700 mt-1">
+            {selectedRoute === '/api/orders'
+              ? 'Failover to v1.4.0 strips the tainted raw SQL string interpolation in orders(), eliminating thread blocks.'
+              : selectedRoute === '/api/products'
+              ? 'Failover to v1.4.0 relieves connection pool contention, restoring instant O(1) product catalog queries.'
+              : 'Failover to v1.4.0 unblocks PostgreSQL pool worker threads, restoring payment transaction throughput.'}
           </div>
         </div>
 

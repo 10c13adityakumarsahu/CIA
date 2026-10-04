@@ -21,6 +21,7 @@ interface AppSidebarProps {
   isRecovered: boolean;
   onInitiateAttack: () => void;
   onReset: () => void;
+  stageStatuses?: Record<number, 'idle' | 'processing' | 'completed'>;
 }
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({
@@ -33,7 +34,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   isRecovered,
   onInitiateAttack,
   onReset,
+  stageStatuses,
 }) => {
+  const getBadge = (stepNum: number, defaultBadge: string) => {
+    if (stageStatuses?.[stepNum] === 'processing') return 'Processing...';
+    if (stageStatuses?.[stepNum] === 'completed') return 'Completed';
+    return defaultBadge;
+  };
+
   const navItems = [
     {
       id: 'telemetry' as MainViewTab,
@@ -41,7 +49,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       label: 'Telemetry & Multi-API',
       description: 'Live task-manager streaming buffer',
       icon: Activity,
-      badge: isDegraded ? 'Critical' : 'Live',
+      badge: getBadge(1, isDegraded ? 'Critical' : 'Live'),
     },
     {
       id: 'scans' as MainViewTab,
@@ -49,7 +57,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       label: 'Security Scanners',
       description: 'SAST, SCA, DAST ingestion',
       icon: Shield,
-      badge: '20 Scans',
+      badge: getBadge(2, '20 Scans'),
     },
     {
       id: 'code_diff' as MainViewTab,
@@ -57,7 +65,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       label: 'Gemma RCA & Code Diff',
       description: 'Unified Git diff & AI patch',
       icon: FileCode,
-      badge: hasReport ? 'Synthesized' : 'Ready',
+      badge: getBadge(3, hasReport ? 'Synthesized' : 'Ready'),
     },
     {
       id: 'blast_radius' as MainViewTab,
@@ -65,7 +73,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       label: 'Blast Radius Impact',
       description: 'Cascading pool contention map',
       icon: Database,
-      badge: isDegraded ? 'Degraded' : 'Mapped',
+      badge: getBadge(4, isDegraded ? 'Degraded' : 'Mapped'),
     },
     {
       id: 'recovery' as MainViewTab,
@@ -73,7 +81,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       label: 'Verified Recovery',
       description: '1-click safe rollback to v1.4.0',
       icon: ShieldCheck,
-      badge: isRecovered ? '100% LKG' : 'Failover',
+      badge: getBadge(5, isRecovered ? '100% LKG' : 'Failover'),
     },
   ];
 
