@@ -51,7 +51,12 @@ check-s1:
 	@curl -sf http://localhost:5000/v2/shop/tags/list | python3 -c \
 	  "import sys,json; d=json.load(sys.stdin); t=set(d.get('tags',[])); \
 	   missing={'1.3.0','1.4.0','1.5.0'}-t; \
-	   (print('FAIL missing tags:',missing) or sys.exit(1)) if missing else print('OK')"
+	   (print('FAIL missing tags:',missing) or sys.exit(1)) if missing else print('OK')" || \
+	python -c "\
+	import urllib.request, json, sys; \
+	d=json.loads(urllib.request.urlopen('http://localhost:5000/v2/shop/tags/list').read()); \
+	t=set(d.get('tags',[])); missing={'1.3.0','1.4.0','1.5.0'}-t; \
+	(print('FAIL missing tags:', missing) or sys.exit(1)) if missing else print('OK')"
 
 # S2: gateway up and logging; blue/green reachable.
 check-s2:

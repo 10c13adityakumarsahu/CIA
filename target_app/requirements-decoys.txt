@@ -1,0 +1,10 @@
+# SCA decoy packages pinned to old vulnerable versions.
+# Installed with --no-deps to avoid pip backtracking.
+# CVE-2020-14343: PyYAML arbitrary code exec
+PyYAML==5.3.1
+# CVE-2023-32681: requests Proxy-Authorization leak
+requests==2.19.1
+# CVE-2020-28493: Jinja2 ReDoS
+Jinja2==2.11.2
+# CVE-2022-24302: paramiko tmp file race (never imported – pure decoy)
+paramiko==2.7.2

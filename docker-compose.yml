@@ -1,8 +1,7 @@
 # ---------------------------------------------------------------------------
 # CULPRIT – docker-compose.yml
-# Stage 0: infrastructure services only.
-# App services (target_app, gateway, loadgen, culprit-api, ui) are commented
-# out and will be uncommented in subsequent stages.
+# Stage 1: infra + app-blue (v1.5.0 :8001) + app-green (v1.4.0 :8002).
+# Gateway, loadgen, culprit-api, ui remain commented placeholders.
 # ---------------------------------------------------------------------------
 
 x-logging: &default-logging
@@ -26,6 +25,8 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+      - ./target_app/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./target_app/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-culprit}"]
       interval: 5s
@@ -82,19 +83,41 @@ services:
       start_period: 5s
     logging: *default-logging
 
-  # ── Application services (Stage 1+) ────────────────────────────────────────
+  # ── Application services ────────────────────────────────────────────────────
 
-  # blue:          # target_app v1.5.0  :8001  (Stage 1)
-  #   image: localhost:5000/shop:1.5.0
-  #   depends_on:
-  #     db: { condition: service_healthy }
-  #   ports: ["8001:8000"]
+  blue:            # target_app v1.5.0 (current/degraded)  :8001
+    image: localhost:5000/shop:1.5.0
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-culprit}
+    depends_on:
+      db: { condition: service_healthy }
+    ports:
+      - "8001:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    logging: *default-logging
 
-  # green:         # target_app v1.4.0  :8002  (Stage 1)
-  #   image: localhost:5000/shop:1.4.0
-  #   depends_on:
-  #     db: { condition: service_healthy }
-  #   ports: ["8002:8000"]
+  green:           # target_app v1.4.0 (stable/lkg)  :8002
+    image: localhost:5000/shop:1.4.0
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-culprit}
+    depends_on:
+      db: { condition: service_healthy }
+    ports:
+      - "8002:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    logging: *default-logging
 
   # gateway:       # weighted proxy + JSONL logger  :8080  (Stage 2)
   #   build: ./gateway

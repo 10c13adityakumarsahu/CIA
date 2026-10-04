@@ -1,0 +1,8 @@
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+psycopg2-binary==2.9.9
+# pinned old vulnerable deps (SCA decoys) – installed with --no-deps to avoid resolver conflicts
+# PyYAML 5.3.1  → CVE-2020-14343
+# requests 2.19.1 → CVE-2023-32681
+# Jinja2 2.11.2  → CVE-2020-28493
+# paramiko 2.7.2 → CVE-2022-24302 (never imported – decoy)
