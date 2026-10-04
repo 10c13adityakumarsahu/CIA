@@ -1,4 +1,4 @@
-.PHONY: up down demo rescan record \
+.PHONY: up down demo rescan record graph \
         check-s0 check-s1 check-s2 check-s3 check-s4 \
         check-s5 check-s6 check-s7 check-s8
 
@@ -22,8 +22,9 @@ rescan:
 	@echo "==> Running full rescan (SAST, SCA, DAST)..."
 	@python scanners/rescan.py
 
-record:
-	@echo "==> Record requires culprit-api (Stage 5). Not yet available."
+graph:
+	@echo "==> Ingesting code graph and findings into Neo4j..."
+	@python graph/ingest.py
 
 # ── Stage acceptance checks ─────────────────────────────────────────────────
 
@@ -98,17 +99,23 @@ check-s3:
 	reset_scenario(gw); \
 	print('OK: Stage 3 Gateway, Ledger, and Scenario checks passed!')"
 
-# S4: Neo4j graph populated (node count > 0).
+# S4: Neo4j graph populated, queries verified.
 check-s4:
-	@echo "--- check-s4: neo4j graph populated ---"
-	@python3 -c "\
-import urllib.request, json, sys; \
-req=urllib.request.Request('http://localhost:7474/db/neo4j/tx/commit', \
-  data=json.dumps({'statements':[{'statement':'MATCH (n) RETURN count(n) AS c'}]}).encode(), \
-  headers={'Content-Type':'application/json','Accept':'application/json'}); \
-res=json.loads(urllib.request.urlopen(req).read()); \
-c=res['results'][0]['data'][0]['row'][0]; \
-(print('FAIL graph empty') or sys.exit(1)) if c==0 else print('OK count='+str(c))"
+	@echo "--- check-s4: neo4j graph & query templates ---"
+	@python -m pytest tests/test_graph.py -v && python -c "\
+	from graph.queries import data_reach, shared_resource, version_contains; \
+	reach = data_reach('SAST-002'); \
+	reach_ids = {n['id'] for n in reach.get('nodes', [])}; \
+	assert 'route:/api/orders' in reach_ids, 'orders route missing from data_reach'; \
+	assert 'table:customers' in reach_ids and 'table:payments' in reach_ids, 'customers/payments missing from data_reach'; \
+	shared = shared_resource('/api/orders'); \
+	shared_ids = {n['id'] for n in shared.get('nodes', [])}; \
+	assert 'route:/api/products' in shared_ids, 'products route missing from shared_resource'; \
+	for v in ['1.3.0', '1.4.0', '1.5.0']: \
+	    vc = version_contains(['SAST-002'], v); \
+	    assert any('SAST-002' in n['id'] for n in vc.get('nodes', [])), f'SQLi missing in {v}'; \
+	assert len(version_contains(['N+1'], '1.5.0').get('nodes', [])) == 0, 'N+1 should not be in graph'; \
+	print('OK: Stage 4 Neo4j graph queries verified!')"
 
 # S5: culprit-api /api/state returns 200.
 check-s5:
