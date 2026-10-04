@@ -17,26 +17,28 @@ import concurrent.futures
 import json
 import os
 import sys
+import threading
 import time
 from typing import Any, Dict, List
 import requests
 
 DEFAULT_GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://localhost:8080")
+_scenario_running = False
+_worker_thread = None
 
 
 def start_scenario_a(
     gateway_url: str = DEFAULT_GATEWAY_URL,
     burst_count: int = 4,
-    sleep_delay: int = 8,
+    sleep_delay: int = 5,
     attacker_ip: str = "198.51.100.42",
 ) -> Dict[str, Any]:
-    """Inject Scenario A: SQLi time-delay attack burst."""
-    print(f"[Scenario A] Sending {burst_count} exploit requests with {sleep_delay}s time-delay payload to {gateway_url}...")
+    """Inject Scenario A: SQLi time-delay attack burst into Docker gateway."""
+    global _scenario_running, _worker_thread
+    _scenario_running = True
+    print(f"[Scenario A] Sending exploit requests with {sleep_delay}s time-delay payload to {gateway_url}...")
     url = f"{gateway_url.rstrip('/')}/api/orders"
-    
-    # SQLi payload exploiting the f-string in SELECT id, price FROM products WHERE sku = '{order.sku}'
     sqli_payload = f"WIDGET-001' AND (SELECT 1 FROM pg_sleep({sleep_delay})) IS NOT NULL; --"
-    
     headers = {
         "Content-Type": "application/json",
         "X-Forwarded-For": attacker_ip,
@@ -48,32 +50,29 @@ def start_scenario_a(
         "qty": 1,
     }
 
-    results = []
-    t_start = time.time()
+    def _loop():
+        while _scenario_running:
+            try:
+                requests.post(url, json=body, headers=headers, timeout=sleep_delay + 2)
+            except Exception:
+                pass
+            time.sleep(1.0)
 
-    def send_one(req_num: int):
-        try:
-            t0 = time.time()
-            r = requests.post(url, json=body, headers=headers, timeout=sleep_delay + 5)
-            elapsed = time.time() - t0
-            return {"req": req_num, "status": r.status_code, "elapsed": round(elapsed, 3)}
-        except Exception as exc:
-            elapsed = time.time() - t0
-            return {"req": req_num, "status": 504, "error": str(exc), "elapsed": round(elapsed, 3)}
-
+    # Fire initial burst concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers=burst_count) as executor:
-        futures = [executor.submit(send_one, i) for i in range(burst_count)]
-        for f in concurrent.futures.as_completed(futures):
-            results.append(f.result())
+        for _ in range(burst_count):
+            executor.submit(lambda: requests.post(url, json=body, headers=headers, timeout=sleep_delay + 2) if _scenario_running else None)
 
-    total_time = time.time() - t_start
-    print(f"[Scenario A] Completed injection in {total_time:.2f}s. Results: {results}")
+    if _worker_thread is None or not _worker_thread.is_alive():
+        _worker_thread = threading.Thread(target=_loop, daemon=True)
+        _worker_thread.start()
+
     return {
         "scenario": "a_exploit",
         "burst_count": burst_count,
         "sleep_delay": sleep_delay,
         "attacker_ip": attacker_ip,
-        "results": results,
+        "status": "running",
     }
 
 
@@ -82,58 +81,70 @@ def start_scenario_b(
     num_requests: int = 15,
 ) -> Dict[str, Any]:
     """Inject Scenario B: 100% blue routing + multi-item N+1 order traffic."""
+    global _scenario_running, _worker_thread
+    _scenario_running = True
     print(f"[Scenario B] Shifting weights to 100% blue and generating heavy multi-item traffic...")
     admin_url = f"{gateway_url.rstrip('/')}/admin/weights"
-    requests.post(admin_url, json={"blue": 100, "green": 0}, timeout=5)
+    try:
+        requests.post(admin_url, json={"blue": 100, "green": 0}, timeout=5)
+    except Exception:
+        pass
 
     orders_url = f"{gateway_url.rstrip('/')}/api/orders"
     products_url = f"{gateway_url.rstrip('/')}/api/products"
 
     skus = ["WIDGET-001", "WIDGET-002", "GADGET-001", "GADGET-002", "TOOL-001", "TOOL-002", "PART-001", "PART-002", "PART-003", "PART-004"]
     multi_items = [{"sku": s, "qty": 1} for s in skus]
+    body = {
+        "customer_id": 1,
+        "sku": "WIDGET-001",
+        "qty": 1,
+        "items": multi_items,
+    }
 
-    results = []
+    def _loop_b():
+        count = 0
+        while _scenario_running:
+            try:
+                if count % 2 == 0:
+                    requests.get(products_url, timeout=6)
+                else:
+                    requests.post(orders_url, json=body, timeout=10)
+                count += 1
+            except Exception:
+                pass
+            time.sleep(1.0)
 
-    def send_order_or_product(idx: int):
-        try:
-            t0 = time.time()
-            if idx % 3 == 0:
-                r = requests.get(products_url, timeout=10)
-            else:
-                body = {
-                    "customer_id": 1,
-                    "sku": "WIDGET-001",
-                    "qty": 1,
-                    "items": multi_items,
-                }
-                r = requests.post(orders_url, json=body, timeout=15)
-            elapsed = time.time() - t0
-            return {"req": idx, "status": r.status_code, "elapsed": round(elapsed, 4)}
-        except Exception as exc:
-            return {"req": idx, "status": 500, "error": str(exc)}
+    # Initial concurrent burst
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        for _ in range(4):
+            executor.submit(lambda: requests.post(orders_url, json=body, timeout=8) if _scenario_running else None)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [executor.submit(send_order_or_product, i) for i in range(num_requests)]
-        for f in concurrent.futures.as_completed(futures):
-            results.append(f.result())
+    if _worker_thread is None or not _worker_thread.is_alive():
+        _worker_thread = threading.Thread(target=_loop_b, daemon=True)
+        _worker_thread.start()
 
-    print(f"[Scenario B] Sent {num_requests} multi-item requests to 1.5.0.")
     return {
         "scenario": "b_regression",
         "requests_sent": num_requests,
-        "results": results,
+        "status": "running",
     }
 
 
 def reset_scenario(gateway_url: str = DEFAULT_GATEWAY_URL) -> Dict[str, Any]:
     """Reset gateway weights to 50/50 and remove all block rules."""
+    global _scenario_running
+    _scenario_running = False
     base = gateway_url.rstrip("/")
-    requests.post(f"{base}/admin/weights", json={"blue": 50, "green": 50}, timeout=5)
-    state = requests.get(f"{base}/admin/state", timeout=5).json()
-    for rule in state.get("rules", []):
-        requests.delete(f"{base}/admin/rules/{rule['id']}", timeout=5)
-    for route in state.get("disabled_routes", []):
-        requests.post(f"{base}/admin/enable", json={"route": route}, timeout=5)
+    try:
+        requests.post(f"{base}/admin/weights", json={"blue": 50, "green": 50}, timeout=5)
+        state = requests.get(f"{base}/admin/state", timeout=5).json()
+        for rule in state.get("rules", []):
+            requests.delete(f"{base}/admin/rules/{rule['id']}", timeout=5)
+        for route in state.get("disabled_routes", []):
+            requests.post(f"{base}/admin/enable", json={"route": route}, timeout=5)
+    except Exception as exc:
+        print(f"Reset warning: {exc}")
     return {"status": "reset", "weights": {"blue": 50, "green": 50}}
 
 

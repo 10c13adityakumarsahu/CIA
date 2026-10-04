@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   GatewayState,
   RouteMetrics,
@@ -27,11 +27,27 @@ import { InvestigationFeed } from './components/InvestigationFeed';
 import { AttackPathGraph } from './components/AttackPathGraph';
 import { BlastRadiusGraph } from './components/BlastRadiusGraph';
 import { MitigationView } from './components/MitigationView';
+import { CulpritCodeSnippetCard } from './components/CulpritCodeSnippetCard';
+import { RollbackControlCard } from './components/RollbackControlCard';
 import { PitchRcaView } from './components/PitchRcaView';
 import { IncidentStepper, IncidentStep } from './components/IncidentStepper';
 import { ReportExportModal } from './components/ReportExportModal';
 import { CitationDrawer } from './components/CitationDrawer';
-import { AlertCircle, ArrowRight, ShieldAlert, Cpu, CheckCircle2, Sparkles } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  ShieldAlert,
+  Cpu,
+  CheckCircle2,
+  Sparkles,
+  Zap,
+  RotateCcw,
+  Shield,
+  FileCode,
+  Layers,
+  ChevronDown
+} from 'lucide-react';
+import { cn } from './lib/utils';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<MainViewTab>('overview');
@@ -48,6 +64,8 @@ export function App() {
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<IncidentStep>('telemetry');
+
+  const rcaRef = useRef<HTMLDivElement>(null);
 
   // Initial load and periodic polling
   const loadInitialData = useCallback(async () => {
@@ -77,7 +95,7 @@ export function App() {
         if (s) setState(s);
         if (m) setMetrics(m);
       } catch {}
-    }, 4000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [loadInitialData]);
 
@@ -87,7 +105,7 @@ export function App() {
       setEvents([]);
       setReport(null);
       setVerification(null);
-      setMarkerText(scenario === 'a_exploit' ? 'Exploit Burst Injected' : '100% Shift to 1.5.0');
+      setMarkerText(scenario === 'a_exploit' ? 'Exploit Injected into Docker Container' : '100% Shift to 1.5.0');
       setCurrentStep('telemetry');
       await startScenario(scenario);
       await loadInitialData();
@@ -107,13 +125,12 @@ export function App() {
       await resetScenario();
       await loadInitialData();
     } catch (err: any) {
-      setErrorBanner(`Failed to reset scenario: ${err.message}`);
+      setErrorBanner(`Failed to reset: ${err.message}`);
     }
   };
 
   const handleInvestigate = async () => {
     setIsInvestigating(true);
-    setCurrentTab('investigate');
     setCurrentStep('gemma_rca');
     setEvents([]);
     setReport(null);
@@ -157,25 +174,24 @@ export function App() {
     if (isDegraded && !report && !isInvestigating) {
       console.log(
         '%c[CULPRIT AUTO-RCA] 🚨 Multi-API Degradation & Blast Radius Cascade Detected!',
-        'color: #ef4444; font-weight: bold; font-size: 13px;'
+        'color: #000000; background: #fef08a; font-weight: bold; font-size: 13px;'
       );
       console.log(
         '%c[CULPRIT AUTO-RCA] Root Cause Endpoint: POST /api/orders (p95 > 1000ms, DB Pool Starvation)',
-        'color: #f59e0b; font-weight: bold;'
+        'color: #000000; font-weight: bold;'
       );
       console.log(
         '%c[CULPRIT AUTO-RCA] Cascaded Impact: GET /api/products, POST /api/payments experiencing 504 timeouts',
-        'color: #f59e0b;'
+        'color: #71717a;'
       );
       console.log(
         '%c[CULPRIT AUTO-RCA] 🤖 Autonomous AI Invocation: Launching Gemma 4 Tool-Calling Investigation Stream...',
-        'color: #3b82f6; font-weight: bold;'
+        'color: #18181b; font-weight: bold;'
       );
 
-      // Auto-trigger Gemma investigation
       const timer = setTimeout(() => {
         handleInvestigate();
-      }, 1200);
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
@@ -195,25 +211,17 @@ export function App() {
     loadInitialData();
   };
 
-  const handleStepSelect = (step: IncidentStep) => {
-    setCurrentStep(step);
-    if (step === 'telemetry') {
-      setCurrentTab('overview');
-    } else if (step === 'scans') {
-      setCurrentTab('findings');
-    } else if (step === 'gemma_rca') {
-      setCurrentTab('investigate');
-    } else if (step === 'blast_radius') {
-      setCurrentTab('blast_radius');
-    } else if (step === 'mitigate') {
-      setCurrentTab('mitigation');
+  const handleScrollToRca = () => {
+    setCurrentTab('overview');
+    if (rcaRef.current) {
+      rcaRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
   const mode = state?.mode || 'LIVE';
 
   return (
-    <div className="flex h-screen w-screen bg-[#F8FAFC] text-slate-900 overflow-hidden font-sans">
+    <div className="flex h-screen w-screen bg-white text-zinc-900 overflow-hidden font-sans">
       {/* Clean Left Navigation Sidebar */}
       <AppSidebar
         currentTab={currentTab}
@@ -226,148 +234,188 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Top Header */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#FAFAFA]">
+        {/* Top Minimalist Header */}
         <Header
           mode={mode}
           activeScenario={activeScenario}
           isInvestigating={isInvestigating}
+          onInitiateAttack={() => handleSelectScenario('a_exploit')}
+          onReset={handleReset}
           onInvestigate={handleInvestigate}
           onExportReport={() => setIsExportOpen(true)}
         />
 
-        {/* Guided Workflow Stepper */}
-        <IncidentStepper
-          currentStep={currentStep}
-          onSelectStep={handleStepSelect}
-          onExportReport={() => setIsExportOpen(true)}
-          isDegraded={isDegraded}
-          hasReport={report !== null}
-          isInvestigating={isInvestigating}
-        />
+        {/* High-Contrast Incident Alert Banner */}
+        {isDegraded && (
+          <div className="bg-black text-white px-6 py-2.5 flex items-center justify-between border-b border-zinc-800 shadow-md shrink-0">
+            <div className="flex items-center space-x-3">
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              </span>
+              <div className="flex items-center space-x-2 text-xs">
+                <span className="font-bold tracking-wide uppercase text-red-400">Incident Alert:</span>
+                <span className="text-zinc-200">
+                  Whitebox Attack Active — Latency Surge & DB Pool Contention on <code className="font-mono bg-zinc-800 px-1 py-0.5 rounded text-white">/api/orders</code> (Docker container <code className="font-mono bg-zinc-800 px-1 py-0.5 rounded text-white">:8001</code>)
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleScrollToRca}
+              className="px-3 py-1 bg-white text-black hover:bg-zinc-100 rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer"
+            >
+              <span>View RCA & Gemma Fixes</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Error Notification Banner */}
         {errorBanner && (
-          <div className="bg-red-50 border-b border-red-200 px-6 py-2 flex items-center justify-between text-xs text-red-800">
+          <div className="bg-zinc-100 border-b border-zinc-300 px-6 py-2 flex items-center justify-between text-xs text-zinc-900">
             <div className="flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 text-red-600" />
+              <AlertCircle className="w-4 h-4 text-black" />
               <span>{errorBanner}</span>
             </div>
             <button
               type="button"
               onClick={() => setErrorBanner(null)}
-              className="text-red-600 hover:text-red-900 font-bold"
+              className="text-zinc-600 hover:text-black font-bold"
             >
               ✕
             </button>
           </div>
         )}
 
-        {/* Dynamic Main View */}
+        {/* Dynamic Main Content */}
         <main className="flex-1 overflow-hidden relative">
           {currentTab === 'overview' && (
-            <div className="h-full overflow-y-auto p-6 space-y-6">
-              {/* Telemetry Chart Component */}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-                <MetricsChart
+            <div className="h-full overflow-y-auto p-6 space-y-8">
+              {/* ================= STEP 1: REAL-TIME TELEMETRY ================= */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
+                      1
+                    </span>
+                    <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+                      Real-Time Gateway Telemetry & Multi-API Health
+                    </h2>
+                  </div>
+                  <span className="text-xs text-zinc-500 font-mono">1-second streaming Task-Manager buffer</span>
+                </div>
+
+                {/* Telemetry Chart Component */}
+                <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-4">
+                  <MetricsChart
+                    metrics={metrics}
+                    selectedRoute="/api/orders|all"
+                    markerText={markerText}
+                    onInvestigate={handleInvestigate}
+                  />
+                </div>
+
+                {/* Multi-API Percentiles & Failure Status Table */}
+                <ApiMetricsTable
                   metrics={metrics}
-                  selectedRoute="/api/orders|all"
-                  markerText={markerText}
-                  onInvestigate={handleInvestigate}
+                  onInvestigateRoute={() => handleInvestigate()}
                 />
-              </div>
+              </section>
 
-              {/* End-to-End Investigation Pipeline Progression */}
-              <IncidentAnalysisPipelineTimeline
-                isInvestigating={isInvestigating}
-                hasReport={report !== null}
-                onSelectCitation={handleSelectCitation}
-                scenario={activeScenario}
-              />
-
-              {/* Multi-API Percentiles & Failure Status Table */}
-              <ApiMetricsTable
-                metrics={metrics}
-                onInvestigateRoute={() => handleInvestigate()}
-              />
-
-              {/* Quick Incident Insights Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Vulnerability Scans
+              {/* ================= STEP 2: SECURITY & MULTI-VERSION SCANS ================= */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
+                      2
                     </span>
-                    <ShieldAlert className="w-4 h-4 text-amber-500" />
+                    <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+                      Security & Multi-Version Scans (SAST, SCA, DAST, WAF)
+                    </h2>
                   </div>
-                  <div>
-                    <div className="text-2xl font-black text-slate-900">
-                      {findings.length} Findings
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">
-                      SAST (AST tainted sql), SCA (CVE-2024-41123, CVE-2023-43665), and DAST injection points.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentTab('findings')}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer"
-                  >
-                    <span>View All Scans & CVEs</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
+                  <span className="text-xs text-zinc-500 font-mono">
+                    {findings.length} Total Findings Across Releases
+                  </span>
                 </div>
 
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Gemma 4 RCA Engine
+                <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-5">
+                  <FindingsRail
+                    findings={findings}
+                    findingVerdicts={report?.finding_verdicts}
+                    onSelectCitation={handleSelectCitation}
+                  />
+                </div>
+              </section>
+
+              {/* ================= STEP 3: GEMMA 4 RCA & LIVE GIT CODE DIFF ================= */}
+              <section ref={rcaRef} id="rca-section" className="space-y-4 scroll-mt-6">
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
+                      3
                     </span>
-                    <Sparkles className="w-4 h-4 text-blue-500" />
+                    <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+                      Gemma 4 Autonomous RCA & Live Git Code Diff
+                    </h2>
                   </div>
-                  <div>
-                    <div className="text-2xl font-black text-slate-900">
-                      {report ? report.verdict : isInvestigating ? 'Analyzing...' : 'Ready'}
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {report?.incident_summary || 'Multi-tool agent correlating logs, tainted code ASTs, and blast radius.'}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleInvestigate}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer"
-                  >
-                    <span>{report ? 'View Investigation Feed' : 'Run Gemma RCA Now'}</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
+                  <span className="text-xs text-zinc-500 font-mono">
+                    {report ? `Verdict: ${report.verdict}` : isInvestigating ? 'Gemma Investigating...' : 'Ready'}
+                  </span>
                 </div>
 
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Mitigation & Recovery
+                {/* End-to-End Investigation Pipeline Progression */}
+                <IncidentAnalysisPipelineTimeline
+                  isInvestigating={isInvestigating}
+                  hasReport={report !== null}
+                  onSelectCitation={handleSelectCitation}
+                  scenario={activeScenario}
+                />
+
+                {/* Live Code Snippet & Unified Git Diff Card */}
+                <CulpritCodeSnippetCard
+                  scenario={activeScenario}
+                  onSelectCitation={handleSelectCitation}
+                />
+              </section>
+
+              {/* ================= STEP 4: BLAST RADIUS & VERIFIED RECOVERY ================= */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
+                      4
                     </span>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+                      Blast Radius Containment & 1-Click Code-Verified Recovery
+                    </h2>
                   </div>
-                  <div>
-                    <div className="text-2xl font-black text-slate-900">
-                      {report?.mitigations?.length || 0} Safe Actions
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Deterministic verification ensures rollbacks target only clean versions (v1.4.0 LKG).
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentTab('mitigation')}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer"
-                  >
-                    <span>Inspect Mitigation Options</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
+                  <span className="text-xs text-zinc-500 font-mono">
+                    Deterministic LKG Safety Preconditions
+                  </span>
                 </div>
-              </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* 1-Click Rollback Control Card */}
+                  <RollbackControlCard
+                    state={state}
+                    onMitigationExecuted={handleMitigationExecuted}
+                  />
+
+                  {/* Mitigation Safe Actions View */}
+                  <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-5">
+                    <MitigationView
+                      mitigations={report?.mitigations || []}
+                      rejectedOptions={report?.rejected_options || []}
+                      state={state}
+                      onSelectCitation={handleSelectCitation}
+                      onMitigationExecuted={handleMitigationExecuted}
+                    />
+                  </div>
+                </div>
+              </section>
             </div>
           )}
 
@@ -446,4 +494,3 @@ export function App() {
 }
 
 export default App;
-
