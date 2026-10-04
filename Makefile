@@ -19,7 +19,8 @@ demo:
 	@docker compose ps
 
 rescan:
-	@echo "==> Rescan requires scanners/ scripts (Stage 3). Not yet available."
+	@echo "==> Running full rescan (SAST, SCA, DAST)..."
+	@python scanners/rescan.py
 
 record:
 	@echo "==> Record requires culprit-api (Stage 5). Not yet available."
@@ -58,10 +59,19 @@ check-s1:
 	t=set(d.get('tags',[])); missing={'1.3.0','1.4.0','1.5.0'}-t; \
 	(print('FAIL missing tags:', missing) or sys.exit(1)) if missing else print('OK')"
 
-# S2: gateway up and logging; blue/green reachable.
+# S2: findings present, normalize tests pass, deterministic IDs & fingerprints.
 check-s2:
-	@echo "--- check-s2: gateway health ---"
-	@curl -sf http://localhost:8080/health && echo OK || (echo FAIL && exit 1)
+	@echo "--- check-s2: findings & normalization ---"
+	@python -m pytest tests/test_normalize.py -v && python -c "\
+	from pathlib import Path; \
+	from culprit.normalize import load_all_findings; \
+	findings = load_all_findings(Path('findings')); \
+	sources = {f.source for f in findings}; \
+	assert {'sast', 'sca'}.issubset(sources), f'Missing sources: {sources}'; \
+	sqli = [f for f in findings if 'CWE-89' in f.cwe]; \
+	assert sqli and set(sqli[0].present_in) == {'1.3.0', '1.4.0', '1.5.0'}, 'SQLi present_in check failed'; \
+	assert not any('n+1' in f.title.lower() or 'n+1' in f.detail.lower() for f in findings), 'N+1 should not be a finding'; \
+	print('OK: Findings normalized count=' + str(len(findings)))"
 
 # S3: findings JSON present for all three scanners.
 check-s3:

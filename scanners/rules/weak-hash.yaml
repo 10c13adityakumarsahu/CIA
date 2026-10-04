@@ -1,0 +1,14 @@
+rules:
+  - id: weak-hash
+    patterns:
+      - pattern-either:
+          - pattern: hashlib.md5(...)
+          - pattern: hashlib.sha1(...)
+    message: "Use of weak cryptographic hash algorithm (MD5 or SHA1)"
+    metadata:
+      cwe:
+        - "CWE-328"
+      owasp: "A02:2021-Cryptographic Failures"
+    languages:
+      - python
+    severity: WARNING
