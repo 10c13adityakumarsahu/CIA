@@ -4,22 +4,14 @@ import {
   Download,
   ShieldAlert,
   RotateCcw,
-  Zap,
-  Terminal,
-  Activity,
-  Shield,
-  Layers,
-  FileCode
+  Zap
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { MainViewTab } from './AppSidebar';
 
 interface HeaderProps {
   mode: 'LIVE' | 'REPLAY';
   activeScenario: string | null;
   isInvestigating: boolean;
-  currentTab: MainViewTab;
-  onSelectTab: (tab: MainViewTab) => void;
   onInitiateAttack: () => void;
   onReset: () => void;
   onInvestigate: () => void;
@@ -30,8 +22,6 @@ export const Header: React.FC<HeaderProps> = ({
   mode,
   activeScenario,
   isInvestigating,
-  currentTab,
-  onSelectTab,
   onInitiateAttack,
   onReset,
   onInvestigate,
@@ -40,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="h-14 bg-white border-b border-zinc-200 px-6 flex items-center justify-between z-20 select-none shrink-0 shadow-xs">
       {/* Brand & Mode */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-3">
         <div className="flex items-center space-x-2">
           <div className="w-7 h-7 bg-black text-white rounded flex items-center justify-center font-mono font-black text-xs">
             C
@@ -65,72 +55,14 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Center: Workflow Navigation Anchors */}
-      <div className="hidden lg:flex items-center bg-zinc-100 p-0.5 rounded border border-zinc-200 text-xs font-mono">
-        <button
-          type="button"
-          onClick={() => onSelectTab('overview')}
-          className={cn(
-            'px-3 py-1 rounded transition font-medium',
-            currentTab === 'overview'
-              ? 'bg-black text-white font-bold shadow-xs'
-              : 'text-zinc-600 hover:text-zinc-900'
-          )}
-        >
-          Single Workflow
-        </button>
-        <button
-          type="button"
-          onClick={() => onSelectTab('investigate')}
-          className={cn(
-            'px-3 py-1 rounded transition font-medium',
-            currentTab === 'investigate'
-              ? 'bg-black text-white font-bold shadow-xs'
-              : 'text-zinc-600 hover:text-zinc-900'
-          )}
-        >
-          Investigation Stream
-        </button>
-        <button
-          type="button"
-          onClick={() => onSelectTab('blast_radius')}
-          className={cn(
-            'px-3 py-1 rounded transition font-medium',
-            currentTab === 'blast_radius'
-              ? 'bg-black text-white font-bold shadow-xs'
-              : 'text-zinc-600 hover:text-zinc-900'
-          )}
-        >
-          Blast Radius Map
-        </button>
-        <button
-          type="button"
-          onClick={() => onSelectTab('pitch_rca')}
-          className={cn(
-            'px-3 py-1 rounded transition font-medium',
-            currentTab === 'pitch_rca'
-              ? 'bg-black text-white font-bold shadow-xs'
-              : 'text-zinc-600 hover:text-zinc-900'
-          )}
-        >
-          Pitch & Deep-Dive
-        </button>
-      </div>
-
       {/* Main Workflow Action Controls */}
       <div className="flex items-center space-x-2">
-        {/* Initiate Whitebox Attack Button */}
+        {/* Initiate Whitebox Attack Button - Always clickable and active */}
         <button
           type="button"
           onClick={onInitiateAttack}
-          disabled={activeScenario !== null}
-          className={cn(
-            'px-3.5 py-1.5 rounded font-semibold text-xs flex items-center space-x-1.5 transition border cursor-pointer',
-            activeScenario !== null
-              ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed'
-              : 'bg-black text-white border-black hover:bg-zinc-800 active:scale-98 shadow-sm'
-          )}
-          title="Inject real-time SQL injection burst directly into Docker target container"
+          className="px-3.5 py-1.5 rounded font-semibold text-xs flex items-center space-x-1.5 transition border cursor-pointer bg-black text-white border-black hover:bg-zinc-800 active:scale-98 shadow-sm"
+          title="Inject real-time SQL injection burst directly into Docker target container :8001"
         >
           <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
           <span>Initiate Whitebox Attack</span>
@@ -140,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           type="button"
           onClick={onReset}
-          className="px-3 py-1.5 rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-800 text-xs font-semibold flex items-center space-x-1.5 transition active:scale-98 cursor-pointer"
+          className="px-3.5 py-1.5 rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-800 text-xs font-semibold flex items-center space-x-1.5 transition active:scale-98 cursor-pointer"
           title="Reset traffic generation and reset weights"
         >
           <RotateCcw className="w-3.5 h-3.5 text-zinc-600" />

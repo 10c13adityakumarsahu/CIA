@@ -21,15 +21,10 @@ import { Header } from './components/Header';
 import { MainViewTab } from './components/AppSidebar';
 import { MetricsChart } from './components/MetricsChart';
 import { ApiMetricsTable } from './components/ApiMetricsTable';
-import { IncidentAnalysisPipelineTimeline } from './components/IncidentAnalysisPipelineTimeline';
 import { FindingsRail } from './components/FindingsRail';
-import { InvestigationFeed } from './components/InvestigationFeed';
-import { AttackPathGraph } from './components/AttackPathGraph';
-import { BlastRadiusGraph } from './components/BlastRadiusGraph';
-import { MitigationView } from './components/MitigationView';
 import { CulpritCodeSnippetCard } from './components/CulpritCodeSnippetCard';
 import { RollbackControlCard } from './components/RollbackControlCard';
-import { PitchRcaView } from './components/PitchRcaView';
+import { MitigationView } from './components/MitigationView';
 import { ReportExportModal } from './components/ReportExportModal';
 import { CitationDrawer } from './components/CitationDrawer';
 import {
@@ -45,7 +40,8 @@ import {
   FileCode,
   Layers,
   Activity,
-  History
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { cn } from './lib/utils';
 
@@ -63,6 +59,7 @@ export function App() {
   const [selectedCitation, setSelectedCitation] = useState<CitationDetail | null>(null);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [scansCollapsed, setScansCollapsed] = useState(true);
 
   const rcaRef = useRef<HTMLDivElement>(null);
 
@@ -105,6 +102,20 @@ export function App() {
       setReport(null);
       setVerification(null);
       setMarkerText(scenario === 'a_exploit' ? 'Exploit Injected into Docker Container' : '100% Shift to 1.5.0');
+
+      // Optimistically elevate orders latency immediately
+      setMetrics((prev) => ({
+        ...prev,
+        '/api/orders|all': {
+          p50_ms: 120,
+          p95_ms: 5008,
+          err_rate: 0.12,
+          rps: 1.57,
+          count: 100
+        }
+      }));
+
+      // Fire async scenario
       await startScenario(scenario);
       await loadInitialData();
     } catch (err: any) {
@@ -119,6 +130,19 @@ export function App() {
       setVerification(null);
       setEvents([]);
       setMarkerText(undefined);
+
+      // Optimistically restore nominal metrics immediately
+      setMetrics((prev) => ({
+        ...prev,
+        '/api/orders|all': {
+          p50_ms: 22,
+          p95_ms: 38,
+          err_rate: 0.0,
+          rps: 16.2,
+          count: 100
+        }
+      }));
+
       await resetScenario();
       await loadInitialData();
     } catch (err: any) {
@@ -162,7 +186,11 @@ export function App() {
     }
   };
 
-  const isDegraded = (metrics?.['/api/orders|all']?.p95_ms || 0) > 800 || (metrics?.['/api/orders|all']?.err_rate || 0) > 0.02 || activeScenario !== null;
+  const isDegraded =
+    state?.weights?.green !== 100 &&
+    ((metrics?.['/api/orders|all']?.p95_ms || 0) > 800 ||
+      (metrics?.['/api/orders|all']?.err_rate || 0) > 0.02 ||
+      activeScenario !== null);
 
   // Autonomous AI Call on Failure Detection with mandatory Console Log
   useEffect(() => {
@@ -207,7 +235,6 @@ export function App() {
   };
 
   const handleScrollToRca = () => {
-    setCurrentTab('overview');
     if (rcaRef.current) {
       rcaRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -222,8 +249,6 @@ export function App() {
         mode={mode}
         activeScenario={activeScenario}
         isInvestigating={isInvestigating}
-        currentTab={currentTab}
-        onSelectTab={setCurrentTab}
         onInitiateAttack={() => handleSelectScenario('a_exploit')}
         onReset={handleReset}
         onInvestigate={handleInvestigate}
@@ -270,7 +295,9 @@ export function App() {
             ) : report ? (
               <span>Root cause confirmed in code diff: f-string SQLi. Safe target v1.4.0 verified.</span>
             ) : isDegraded ? (
-              <span className="text-zinc-900 font-semibold">Whitebox SQLi holding worker locks in Docker container :8001. Multiple routes degraded.</span>
+              <span className="text-zinc-900 font-semibold">
+                Whitebox SQLi holding worker locks in Docker container :8001. Multiple routes degraded.
+              </span>
             ) : (
               <span>Gateway running normally. Ready to test autonomous incident investigation.</span>
             )}
@@ -337,204 +364,141 @@ export function App() {
         </div>
       )}
 
-      {/* Main Content Viewport */}
+      {/* Main Single Workflow Viewport */}
       <main className="flex-1 overflow-hidden relative">
-        {currentTab === 'overview' && (
-          <div className="h-full overflow-y-auto px-6 py-6 space-y-8 max-w-7xl mx-auto">
-            {/* ================= STEP 1: REAL-TIME TELEMETRY ================= */}
-            <section className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
-                <div className="flex items-center space-x-2.5">
-                  <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
-                    1
-                  </span>
-                  <h2 className="text-sm font-bold text-zinc-900 tracking-tight uppercase">
-                    Real-Time Gateway Telemetry & Multi-API Health
-                  </h2>
-                </div>
-                <span className="text-xs text-zinc-500 font-mono">1-second streaming Task-Manager buffer</span>
+        <div className="h-full overflow-y-auto px-6 py-6 space-y-8 max-w-7xl mx-auto">
+          {/* ================= STEP 1: REAL-TIME TELEMETRY ================= */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
+                  1
+                </span>
+                <h2 className="text-sm font-bold text-zinc-900 tracking-tight uppercase">
+                  Real-Time Gateway Telemetry & Multi-API Health
+                </h2>
+              </div>
+              <span className="text-xs text-zinc-500 font-mono">1-second streaming Task-Manager buffer</span>
+            </div>
+
+            {/* Side-by-Side: Task Manager Telemetry Chart & Multi-API Health Table */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+              {/* Telemetry Chart Component */}
+              <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-5 flex flex-col">
+                <MetricsChart
+                  metrics={metrics}
+                  selectedRoute="/api/orders|all"
+                  markerText={markerText}
+                  onInvestigate={handleInvestigate}
+                />
               </div>
 
-              {/* Side-by-Side: Task Manager Telemetry Chart & Multi-API Health Table */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
-                {/* Telemetry Chart Component */}
-                <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-5 flex flex-col">
-                  <MetricsChart
-                    metrics={metrics}
-                    selectedRoute="/api/orders|all"
-                    markerText={markerText}
-                    onInvestigate={handleInvestigate}
-                  />
-                </div>
-
-                {/* Multi-API Percentiles & Failure Status Table */}
-                <div className="flex flex-col">
-                  <ApiMetricsTable
-                    metrics={metrics}
-                    onInvestigateRoute={() => handleInvestigate()}
-                  />
-                </div>
+              {/* Multi-API Percentiles & Failure Status Table */}
+              <div className="flex flex-col">
+                <ApiMetricsTable
+                  metrics={metrics}
+                  onInvestigateRoute={() => handleInvestigate()}
+                />
               </div>
-            </section>
+            </div>
+          </section>
 
-            {/* ================= STEP 2: SECURITY & MULTI-VERSION SCANS ================= */}
-            <section className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
-                <div className="flex items-center space-x-2.5">
-                  <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
-                    2
-                  </span>
-                  <h2 className="text-sm font-bold text-zinc-900 tracking-tight uppercase">
-                    Security Scanners (SAST, SCA, DAST, WAF)
-                  </h2>
-                </div>
+          {/* ================= STEP 2: SECURITY & MULTI-VERSION SCANS (COLLAPSIBLE) ================= */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
+                  2
+                </span>
+                <h2 className="text-sm font-bold text-zinc-900 tracking-tight uppercase">
+                  Security Scanners (SAST, SCA, DAST, WAF)
+                </h2>
+              </div>
+              <div className="flex items-center space-x-3">
                 <span className="text-xs text-zinc-500 font-mono">
                   {findings.length} Total Findings Across Releases
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setScansCollapsed(!scansCollapsed)}
+                  className="px-2.5 py-1 text-xs font-mono font-semibold rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-800 flex items-center space-x-1.5 transition cursor-pointer"
+                >
+                  <span>{scansCollapsed ? 'Expand Scans' : 'Collapse Scans'}</span>
+                  {scansCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                </button>
               </div>
+            </div>
 
-              <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-5">
+            {!scansCollapsed && (
+              <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-5 transition-all">
                 <FindingsRail
                   findings={findings}
                   findingVerdicts={report?.finding_verdicts}
                   onSelectCitation={handleSelectCitation}
                 />
               </div>
-            </section>
+            )}
+          </section>
 
-            {/* ================= STEP 3: GEMMA 4 RCA & LIVE GIT CODE DIFF ================= */}
-            <section ref={rcaRef} id="rca-section" className="space-y-4 scroll-mt-6">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
-                <div className="flex items-center space-x-2.5">
-                  <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
-                    3
-                  </span>
-                  <h2 className="text-sm font-bold text-zinc-900 tracking-tight uppercase">
-                    Gemma 4 Autonomous RCA & Live Git Code Diff
-                  </h2>
-                </div>
-                <span className="text-xs text-zinc-500 font-mono">
-                  {report ? `Verdict: ${report.verdict}` : isInvestigating ? 'Gemma Investigating...' : 'Ready'}
+          {/* ================= STEP 3: GEMMA 4 RCA & LIVE GIT CODE DIFF ================= */}
+          <section ref={rcaRef} id="rca-section" className="space-y-4 scroll-mt-6">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
+                  3
                 </span>
+                <h2 className="text-sm font-bold text-zinc-900 tracking-tight uppercase">
+                  Gemma 4 Autonomous RCA & Live Git Code Diff
+                </h2>
               </div>
+              <span className="text-xs text-zinc-500 font-mono">
+                {report ? `Verdict: ${report.verdict}` : isInvestigating ? 'Gemma Investigating...' : 'Ready'}
+              </span>
+            </div>
 
-              {/* End-to-End Investigation Pipeline Progression */}
-              <IncidentAnalysisPipelineTimeline
-                isInvestigating={isInvestigating}
-                hasReport={report !== null}
-                onSelectCitation={handleSelectCitation}
-                scenario={activeScenario}
+            {/* Live Code Snippet & Unified Git Diff Card */}
+            <CulpritCodeSnippetCard
+              scenario={activeScenario}
+              onSelectCitation={handleSelectCitation}
+            />
+          </section>
+
+          {/* ================= STEP 4: BLAST RADIUS & VERIFIED RECOVERY ================= */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
+                  4
+                </span>
+                <h2 className="text-sm font-bold text-zinc-900 tracking-tight uppercase">
+                  Blast Radius Containment & 1-Click Code-Verified Recovery
+                </h2>
+              </div>
+              <span className="text-xs text-zinc-500 font-mono">
+                Deterministic LKG Preconditions
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* 1-Click Rollback Control Card */}
+              <RollbackControlCard
+                state={state}
+                onMitigationExecuted={handleMitigationExecuted}
               />
 
-              {/* Live Code Snippet & Unified Git Diff Card */}
-              <CulpritCodeSnippetCard
-                scenario={activeScenario}
-                onSelectCitation={handleSelectCitation}
-              />
-            </section>
-
-            {/* ================= STEP 4: BLAST RADIUS & VERIFIED RECOVERY ================= */}
-            <section className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
-                <div className="flex items-center space-x-2.5">
-                  <span className="w-6 h-6 bg-black text-white text-xs font-bold rounded flex items-center justify-center font-mono">
-                    4
-                  </span>
-                  <h2 className="text-sm font-bold text-zinc-900 tracking-tight uppercase">
-                    Blast Radius Containment & 1-Click Code-Verified Recovery
-                  </h2>
-                </div>
-                <span className="text-xs text-zinc-500 font-mono">
-                  Deterministic LKG Preconditions
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {/* 1-Click Rollback Control Card */}
-                <RollbackControlCard
+              {/* Mitigation Safe Actions View */}
+              <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-5">
+                <MitigationView
+                  mitigations={report?.mitigations || []}
+                  rejectedOptions={report?.rejected_options || []}
                   state={state}
+                  onSelectCitation={handleSelectCitation}
                   onMitigationExecuted={handleMitigationExecuted}
                 />
-
-                {/* Mitigation Safe Actions View */}
-                <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-5">
-                  <MitigationView
-                    mitigations={report?.mitigations || []}
-                    rejectedOptions={report?.rejected_options || []}
-                    state={state}
-                    onSelectCitation={handleSelectCitation}
-                    onMitigationExecuted={handleMitigationExecuted}
-                  />
-                </div>
               </div>
-            </section>
-          </div>
-        )}
-
-        {currentTab === 'investigate' && (
-          <div className="h-full max-w-7xl mx-auto p-6 overflow-hidden">
-            <InvestigationFeed
-              events={events}
-              report={report}
-              verification={verification}
-              isInvestigating={isInvestigating}
-              onSelectCitation={handleSelectCitation}
-              scenario={activeScenario}
-            />
-          </div>
-        )}
-
-        {currentTab === 'findings' && (
-          <div className="h-full max-w-7xl mx-auto p-6 overflow-y-auto">
-            <div className="bg-white rounded-xl border border-zinc-200 p-5 shadow-xs">
-              <FindingsRail
-                findings={findings}
-                findingVerdicts={report?.finding_verdicts}
-                onSelectCitation={handleSelectCitation}
-              />
             </div>
-          </div>
-        )}
-
-        {currentTab === 'attack_path' && (
-          <div className="h-full max-w-7xl mx-auto p-6 overflow-hidden">
-            <AttackPathGraph
-              report={report}
-              onSelectCitation={handleSelectCitation}
-            />
-          </div>
-        )}
-
-        {currentTab === 'blast_radius' && (
-          <div className="h-full max-w-7xl mx-auto p-6 overflow-hidden">
-            <BlastRadiusGraph
-              blastRadius={report?.blast_radius || null}
-              onSelectCitation={handleSelectCitation}
-            />
-          </div>
-        )}
-
-        {currentTab === 'mitigation' && (
-          <div className="h-full max-w-7xl mx-auto p-6 overflow-y-auto">
-            <MitigationView
-              mitigations={report?.mitigations || []}
-              rejectedOptions={report?.rejected_options || []}
-              state={state}
-              onSelectCitation={handleSelectCitation}
-              onMitigationExecuted={handleMitigationExecuted}
-            />
-          </div>
-        )}
-
-        {currentTab === 'pitch_rca' && (
-          <div className="h-full max-w-7xl mx-auto p-6 overflow-y-auto">
-            <PitchRcaView
-              activeScenario={activeScenario}
-              onSelectCitation={handleSelectCitation}
-              onTriggerScenario={handleSelectScenario}
-            />
-          </div>
-        )}
+          </section>
+        </div>
       </main>
 
       {/* Slide-out Citation Code/Log Drawer */}

