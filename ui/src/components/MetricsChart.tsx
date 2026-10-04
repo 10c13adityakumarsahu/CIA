@@ -10,7 +10,7 @@ import {
   CartesianGrid
 } from 'recharts';
 import { RouteMetrics } from '../types';
-import { Activity, Zap, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Activity, Zap, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface MetricsChartProps {
@@ -43,7 +43,7 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
 
   const isDegraded = currentMetric.p95_ms > 800 || currentMetric.err_rate > 0.02;
 
-  // Initialize rolling live time-series buffer (30 points, 1s interval like Task Manager)
+  // Rolling live time-series buffer (30 points, 1s interval like Task Manager)
   const [series, setSeries] = useState<DataPoint[]>(() => {
     const now = Date.now();
     const initPoints: DataPoint[] = [];
@@ -52,10 +52,10 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
       const timeStr = d.toTimeString().split(' ')[0];
       initPoints.push({
         time: timeStr,
-        p50: 20 + Math.random() * 8,
-        p95: 42 + Math.random() * 10,
+        p50: 18 + Math.random() * 6,
+        p95: 38 + Math.random() * 8,
         err_rate: 0.0,
-        rps: 14 + Math.random() * 3
+        rps: 15 + Math.random() * 2
       });
     }
     return initPoints;
@@ -73,9 +73,8 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
       const timeStr = now.toTimeString().split(' ')[0];
       const m = currentMetricRef.current;
 
-      // Small jitter for realistic live stream
-      const jitter = (Math.random() - 0.5) * (m.p95_ms > 500 ? 150 : 6);
-      const liveP50 = Math.max(5, Math.round(m.p50_ms + (Math.random() - 0.5) * 4));
+      const jitter = (Math.random() - 0.5) * (m.p95_ms > 500 ? 120 : 4);
+      const liveP50 = Math.max(5, Math.round(m.p50_ms + (Math.random() - 0.5) * 3));
       const liveP95 = Math.max(12, Math.round(m.p95_ms + jitter));
       const liveErr = Math.max(0, Math.min(100, Math.round(m.err_rate * 100 * 10) / 10));
 
@@ -95,164 +94,184 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Compute dynamic max for Y-Axis
   const maxVal = Math.max(
     500,
-    ...series.map(s => s.p95),
+    ...series.map((s) => s.p95),
     currentMetric.p95_ms
   );
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col space-y-4">
-      {/* Top summary cards */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div className="flex flex-col space-y-4">
+      {/* Top summary cards - Clean Monochrome */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-3 border-b border-zinc-100">
         <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
-            <Activity className="w-4 h-4 text-blue-600 animate-pulse" />
+          <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center shrink-0">
+            <Activity className="w-4 h-4 animate-pulse" />
           </div>
           <div>
-            <div className="font-bold text-xs uppercase tracking-wider text-slate-800 flex items-center space-x-2">
-              <span>Real-Time Gateway Telemetry (Live Stream)</span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-700 border border-slate-200">
+            <div className="font-bold text-xs uppercase tracking-wider text-zinc-900 flex items-center space-x-2">
+              <span>Gateway Telemetry (Live Stream)</span>
+              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-zinc-100 text-zinc-800 border border-zinc-200">
                 {selectedRoute}
               </span>
             </div>
-            <div className="text-[11px] text-slate-500">
-              Live streaming task-manager latency buffer (1,000ms rolling interval)
+            <div className="text-[11px] text-zinc-500 font-mono">
+              1-second sliding time window
             </div>
           </div>
         </div>
 
         <div className="flex items-center space-x-2 flex-wrap">
           {/* p50 */}
-          <div className="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center space-x-1.5 font-mono text-xs shadow-xs">
-            <span className="text-slate-500 font-sans">p50:</span>
-            <span className="text-blue-600 font-bold">{Math.round(currentMetric.p50_ms)}ms</span>
+          <div className="bg-zinc-50 px-3 py-1.5 rounded border border-zinc-200 flex items-center space-x-1.5 font-mono text-xs">
+            <span className="text-zinc-500 font-sans">p50:</span>
+            <span className="text-zinc-900 font-bold">{Math.round(currentMetric.p50_ms)}ms</span>
           </div>
 
           {/* p95 */}
-          <div className={cn(
-            'px-3 py-1.5 rounded-lg border flex items-center space-x-1.5 font-mono text-xs shadow-xs transition-colors',
-            isDegraded
-              ? 'bg-red-50 border-red-300 text-red-700'
-              : 'bg-slate-50 border-slate-200 text-slate-800'
-          )}>
-            <span className="text-slate-500 font-sans">p95 (Tail):</span>
-            <span className={cn('font-bold', isDegraded ? 'text-red-600 animate-pulse text-sm' : 'text-slate-900')}>
+          <div
+            className={cn(
+              'px-3 py-1.5 rounded border flex items-center space-x-1.5 font-mono text-xs transition-colors',
+              isDegraded
+                ? 'bg-black text-white border-black'
+                : 'bg-zinc-50 border-zinc-200 text-zinc-900'
+            )}
+          >
+            <span className={cn('font-sans', isDegraded ? 'text-zinc-300' : 'text-zinc-500')}>p95 (Tail):</span>
+            <span className={cn('font-bold', isDegraded ? 'text-white' : 'text-zinc-900')}>
               {Math.round(currentMetric.p95_ms)}ms
             </span>
           </div>
 
           {/* Error Rate */}
-          <div className={cn(
-            'px-3 py-1.5 rounded-lg border flex items-center space-x-1.5 font-mono text-xs shadow-xs',
-            currentMetric.err_rate > 0.01
-              ? 'bg-red-50 border-red-300 text-red-700'
-              : 'bg-slate-50 border-slate-200 text-slate-800'
-          )}>
-            <span className="text-slate-500 font-sans">Err Rate:</span>
-            <span className={cn('font-bold', currentMetric.err_rate > 0.01 ? 'text-red-600' : 'text-emerald-600')}>
+          <div className="bg-zinc-50 px-3 py-1.5 rounded border border-zinc-200 flex items-center space-x-1.5 font-mono text-xs">
+            <span className="text-zinc-500 font-sans">Err Rate:</span>
+            <span className="text-zinc-900 font-bold">
               {(currentMetric.err_rate * 100).toFixed(1)}%
             </span>
           </div>
 
           {/* RPS */}
-          <div className="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center space-x-1.5 font-mono text-xs shadow-xs">
-            <span className="text-slate-500 font-sans">Throughput:</span>
-            <span className="text-slate-800 font-bold">{currentMetric.rps || 16.2} rps</span>
+          <div className="bg-zinc-50 px-3 py-1.5 rounded border border-zinc-200 flex items-center space-x-1.5 font-mono text-xs">
+            <span className="text-zinc-500 font-sans">Throughput:</span>
+            <span className="text-zinc-900 font-bold">{(currentMetric.rps || 15.0).toFixed(2)} rps</span>
           </div>
         </div>
       </div>
 
-      {/* Latency & Error Chart */}
-      <div className="h-48 w-full bg-slate-50/70 rounded-xl border border-slate-200 p-2.5 relative">
-        <div className="absolute top-3 right-4 z-10 flex items-center space-x-3 text-[11px] font-mono select-none">
-          <span className="flex items-center text-amber-700 font-bold">
-            <span className="w-2.5 h-1 bg-amber-500 mr-1.5 rounded" /> p95 Tail Latency
-          </span>
-          <span className="flex items-center text-blue-700 font-bold">
-            <span className="w-2.5 h-1 bg-blue-600 mr-1.5 rounded" /> p50 Median
-          </span>
-        </div>
-
+      {/* Real-time Streaming Line Chart */}
+      <div className="h-64 w-full relative">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={series} margin={{ top: 15, right: 20, left: -15, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-            <XAxis dataKey="time" stroke="#94A3B8" tick={{ fontSize: 10, fontFamily: 'monospace' }} />
+          <LineChart data={series} margin={{ top: 12, right: 16, left: -10, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="2 2" stroke="#F4F4F5" vertical={false} />
+            <XAxis
+              dataKey="time"
+              stroke="#A1A1AA"
+              fontSize={10}
+              tickLine={false}
+              axisLine={{ stroke: '#E4E4E7' }}
+              minTickGap={25}
+              fontFamily="JetBrains Mono, monospace"
+            />
             <YAxis
-              stroke="#94A3B8"
-              tick={{ fontSize: 10, fontFamily: 'monospace' }}
+              stroke="#A1A1AA"
+              fontSize={10}
+              tickLine={false}
+              axisLine={{ stroke: '#E4E4E7' }}
               domain={[0, Math.ceil(maxVal * 1.15)]}
-              unit="ms"
+              tickFormatter={(v) => `${v}ms`}
+              fontFamily="JetBrains Mono, monospace"
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: '#FFFFFF',
-                borderColor: '#CBD5E1',
-                borderRadius: '0.5rem',
-                fontSize: '12px',
-                color: '#0F172A',
-                fontFamily: 'monospace',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload as DataPoint;
+                  return (
+                    <div className="bg-black text-white p-2.5 rounded shadow-xl border border-zinc-800 text-xs font-mono">
+                      <div className="text-zinc-400 text-[10px] mb-1">{data.time}</div>
+                      <div className="text-white font-bold">p95: {data.p95}ms</div>
+                      <div className="text-zinc-300">p50: {data.p50}ms</div>
+                      <div className="text-zinc-300">Errors: {data.err_rate}%</div>
+                      <div className="text-zinc-300">RPS: {data.rps.toFixed(1)}</div>
+                    </div>
+                  );
+                }
+                return null;
               }}
             />
+
             {markerText && (
               <ReferenceLine
-                x={series[series.length - 1]?.time}
-                stroke="#DC2626"
+                x={series[Math.max(0, series.length - 6)]?.time}
+                stroke="#09090B"
+                strokeWidth={1.5}
                 strokeDasharray="3 3"
-                label={{ value: markerText, fill: '#DC2626', fontSize: 11, position: 'insideTopRight' }}
+                label={{
+                  value: markerText,
+                  position: 'top',
+                  fill: '#09090B',
+                  fontSize: 10,
+                  fontWeight: 'bold',
+                  fontFamily: 'monospace'
+                }}
               />
             )}
+
+            {/* p95 Tail Latency: Solid High Contrast Black */}
             <Line
               type="monotone"
               dataKey="p95"
-              stroke="#D97706"
+              stroke="#09090B"
               strokeWidth={2.5}
               dot={false}
               isAnimationActive={false}
-              name="p95 Tail (ms)"
+              name="p95 Tail Latency"
             />
+
+            {/* p50 Median: Sleek Neutral Grey */}
             <Line
               type="monotone"
               dataKey="p50"
-              stroke="#2563EB"
-              strokeWidth={2}
+              stroke="#71717A"
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
               dot={false}
               isAnimationActive={false}
-              name="p50 Median (ms)"
+              name="p50 Median"
             />
           </LineChart>
         </ResponsiveContainer>
+
+        {/* Legend */}
+        <div className="absolute top-2 right-4 flex items-center space-x-4 bg-white/90 px-2.5 py-1 rounded border border-zinc-200 text-[11px] font-mono select-none">
+          <div className="flex items-center space-x-1.5">
+            <span className="w-3 h-0.5 bg-black" />
+            <span className="text-zinc-900 font-semibold">p95 Tail</span>
+          </div>
+          <div className="flex items-center space-x-1.5">
+            <span className="w-3 h-0.5 bg-zinc-500 border-b border-dashed" />
+            <span className="text-zinc-600">p50 Median</span>
+          </div>
+        </div>
       </div>
 
-      {/* Real-Time Degradation Alert Banner */}
+      {/* Degradation Alert Bar inside chart */}
       {isDegraded && (
-        <div className="bg-red-50 border border-red-200 p-3.5 rounded-lg flex items-center justify-between text-xs animate-in fade-in">
-          <div className="flex items-center space-x-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0" />
-            <div>
-              <div className="font-bold text-red-900 flex items-center space-x-2">
-                <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
-                <span>ACTIVE INCIDENT: High Latency Surge & DB Pool Contention Detected</span>
-                <span className="font-mono font-bold text-red-700 bg-red-100 px-1.5 py-0.2 rounded border border-red-200">
-                  p95 @ {Math.round(currentMetric.p95_ms)}ms
-                </span>
-              </div>
-              <p className="text-[11px] text-red-700 font-mono mt-0.5">
-                Database connection pool (5/5) blocked. Attack payload holding worker locks causing 504/500 errors.
-              </p>
-            </div>
+        <div className="bg-zinc-100 border border-zinc-300 rounded p-3 flex items-center justify-between">
+          <div className="flex items-center space-x-2 text-xs">
+            <AlertTriangle className="w-4 h-4 text-black shrink-0" />
+            <span className="font-semibold text-zinc-900">
+              Active Incident: DB Pool Contention Detected (p95 @ {Math.round(currentMetric.p95_ms)}ms)
+            </span>
           </div>
-
           {onInvestigate && (
             <button
               type="button"
               onClick={onInvestigate}
-              className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold font-mono shrink-0 shadow-xs flex items-center space-x-1.5 transition active:scale-98 cursor-pointer"
+              className="px-3 py-1 bg-black text-white hover:bg-zinc-800 rounded text-xs font-semibold flex items-center space-x-1 transition cursor-pointer"
             >
-              <Zap className="w-3.5 h-3.5" />
               <span>Correlate RCA</span>
+              <ArrowRight className="w-3 h-3" />
             </button>
           )}
         </div>

@@ -40,13 +40,13 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
     setActiveStep(1);
 
     try {
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 600));
       setStatusMessage('Target v1.4.0 verified free of implicated findings. Shifting weights to 100% Green...');
       setActiveStep(2);
 
       const res = await executeMitigation('rollback', { version: '1.4.0' });
       if (res?.id) setLastMitigationId(res.id);
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise((r) => setTimeout(r, 800));
       setStatusMessage('Rollback complete! 100% traffic routed to v1.4.0 (LKG stable).');
       setActiveStep(3);
       onMitigationExecuted?.('Rollback to v1.4.0');
@@ -74,157 +74,103 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
 
   const preconditions = [
     { name: 'Target version v1.4.0 in Docker Registry', satisfied: true },
-    { name: 'Target verified clean (0 implicated findings in v1.4.0)', satisfied: true },
+    { name: 'Target verified clean (0 tainted AST nodes in v1.4.0)', satisfied: true },
     { name: 'Redis release ledger verified stable LKG status', satisfied: true },
-    { name: 'Target app healthy on port :8002', satisfied: true },
+    { name: 'Target container healthy on port :8002', satisfied: true },
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl border border-zinc-200 shadow-xs overflow-hidden flex flex-col select-none">
       {/* Header */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-        <div className="flex items-center space-x-2">
-          <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs border border-purple-200">
-            <History className="w-4 h-4 text-purple-600" />
+      <div className="p-4 border-b border-zinc-100 flex items-center justify-between bg-white">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-bold text-xs">
+            <History className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 text-sm">
-              Safe Rollback & Traffic Failover Controller
+            <h3 className="font-bold text-zinc-900 text-xs uppercase tracking-wider">
+              1-Click Safe Rollback Controller
             </h3>
-            <p className="text-xs text-slate-500">
-              Code-verified failover to Last Known Good (LKG) release with safety preconditions.
+            <p className="text-xs text-zinc-500 font-mono">
+              Deterministic LKG failover target
             </p>
           </div>
         </div>
 
         <span
           className={cn(
-            'px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border flex items-center space-x-1',
+            'px-2 py-0.5 rounded text-[11px] font-mono font-bold border flex items-center space-x-1',
             isRolledBack
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-amber-50 text-amber-700 border-amber-200'
+              ? 'bg-black text-white border-black'
+              : 'bg-zinc-100 text-zinc-800 border-zinc-200'
           )}
         >
-          <span className={cn('w-2 h-2 rounded-full', isRolledBack ? 'bg-emerald-500' : 'bg-amber-500')} />
-          <span>{isRolledBack ? 'Rolled Back (v1.4.0 Green 100%)' : 'Current Active (v1.5.0 Blue 100%)'}</span>
+          <span className={cn('w-1.5 h-1.5 rounded-full mr-1', isRolledBack ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse')} />
+          <span>{isRolledBack ? 'ACTIVE: v1.4.0 (100% Green)' : 'ACTIVE: v1.5.0 (100% Blue)'}</span>
         </span>
       </div>
 
-      <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Left: Release Version Comparison */}
-        <div className="space-y-3">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Version Transition Matrix
+      <div className="p-4 space-y-4">
+        {/* Version Transition Matrix */}
+        <div className="grid grid-cols-2 gap-3 font-mono">
+          <div className={cn('p-3 rounded border', isRolledBack ? 'bg-zinc-50 border-zinc-200 opacity-60' : 'bg-zinc-50 border-zinc-300')}>
+            <div className="text-[10px] text-zinc-500 uppercase">Current (Culprit)</div>
+            <div className="text-sm font-bold text-zinc-900 mt-1">v1.5.0 (Blue)</div>
+            <div className="text-[11px] text-zinc-600 mt-0.5">Weight: {blueWeight}%</div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {/* Current (Blue) */}
-            <div className={cn(
-              'p-3 rounded-lg border text-xs font-mono space-y-1.5 transition',
-              blueWeight > 0 ? 'bg-blue-50/80 border-blue-200' : 'bg-slate-50 border-slate-200 opacity-60'
-            )}>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-900">Current (Blue)</span>
-                <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[10px] font-bold">
-                  v1.5.0
-                </span>
-              </div>
-              <div className="text-[11px] text-slate-600 font-sans">
-                Traffic: <span className="font-bold font-mono">{blueWeight}%</span>
-              </div>
-              <div className="text-[10px] text-red-600 font-sans flex items-center space-x-1">
-                <AlertTriangle className="w-3 h-3 text-red-500 shrink-0" />
-                <span>Implicated: CWE-89 Tainted AST</span>
-              </div>
-            </div>
-
-            {/* Target (Green LKG) */}
-            <div className={cn(
-              'p-3 rounded-lg border text-xs font-mono space-y-1.5 transition',
-              greenWeight > 0 ? 'bg-emerald-50/80 border-emerald-200' : 'bg-slate-50 border-slate-200'
-            )}>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-900">Target (Green LKG)</span>
-                <span className="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                  v1.4.0
-                </span>
-              </div>
-              <div className="text-[11px] text-slate-600 font-sans">
-                Traffic: <span className="font-bold font-mono">{greenWeight}%</span>
-              </div>
-              <div className="text-[10px] text-emerald-700 font-sans flex items-center space-x-1">
-                <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                <span>Clean: 0 Vulnerabilities</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Traffic Weight Visualizer Bar */}
-          <div className="space-y-1 pt-1">
-            <div className="flex justify-between text-[11px] text-slate-500 font-mono">
-              <span>v1.5.0 (Blue): {blueWeight}%</span>
-              <span>v1.4.0 (Green): {greenWeight}%</span>
-            </div>
-            <div className="w-full h-2 rounded-full overflow-hidden bg-slate-200 flex">
-              <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${blueWeight}%` }} />
-              <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${greenWeight}%` }} />
-            </div>
+          <div className={cn('p-3 rounded border', isRolledBack ? 'bg-black text-white border-black shadow-xs' : 'bg-zinc-50 border-zinc-300')}>
+            <div className={cn('text-[10px] uppercase', isRolledBack ? 'text-zinc-300' : 'text-zinc-500')}>Target (LKG Stable)</div>
+            <div className={cn('text-sm font-bold mt-1', isRolledBack ? 'text-white' : 'text-zinc-900')}>v1.4.0 (Green)</div>
+            <div className={cn('text-[11px] mt-0.5', isRolledBack ? 'text-zinc-300' : 'text-zinc-600')}>Weight: {greenWeight}%</div>
           </div>
         </div>
 
-        {/* Right: Code-Verified Preconditions Checklist */}
-        <div className="space-y-2">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
-            <span>Safety Preconditions</span>
-            <span className="text-[10px] font-mono text-emerald-600 font-semibold">4/4 Validated</span>
+        {/* Deterministic Preconditions Checklist */}
+        <div className="space-y-1.5 bg-zinc-50 p-3 rounded border border-zinc-200 text-xs font-mono">
+          <div className="font-bold text-zinc-900 text-[11px] uppercase tracking-wider mb-2">
+            Safety Preconditions (Deterministic Check)
           </div>
+          {preconditions.map((p, i) => (
+            <div key={i} className="flex items-center space-x-2 text-zinc-700">
+              <Check className="w-3.5 h-3.5 text-black shrink-0" />
+              <span>{p.name}</span>
+            </div>
+          ))}
+        </div>
 
-          <div className="space-y-1.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-            {preconditions.map((p, i) => (
-              <div key={i} className="flex items-center space-x-2 text-xs text-slate-700">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span className="font-sans leading-tight">{p.name}</span>
-              </div>
-            ))}
+        {/* Status Message if any */}
+        {statusMessage && (
+          <div className="p-2.5 rounded bg-zinc-100 border border-zinc-300 text-xs font-mono text-zinc-900">
+            {statusMessage}
           </div>
+        )}
 
-          {/* Action Button */}
-          <div className="pt-2 flex items-center space-x-2">
-            {!isRolledBack ? (
-              <button
-                type="button"
-                onClick={handleRollback}
-                disabled={isExecuting}
-                className={cn(
-                  'w-full py-2 px-4 rounded-lg font-semibold text-xs text-white flex items-center justify-center space-x-2 transition shadow-sm cursor-pointer',
-                  isExecuting ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 active:scale-98'
-                )}
-              >
-                {isExecuting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
-                <span>{isExecuting ? 'Executing Verified Rollback...' : 'Execute Verified Rollback to v1.4.0 (LKG)'}</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleUndo}
-                disabled={isExecuting}
-                className="w-full py-2 px-4 rounded-lg font-semibold text-xs border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-center space-x-2 transition shadow-xs cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-                <span>Undo Rollback (Restore 100% Blue)</span>
-              </button>
-            )}
-          </div>
+        {/* Action Button */}
+        <div className="pt-2 flex items-center space-x-2">
+          {!isRolledBack ? (
+            <button
+              type="button"
+              onClick={handleRollback}
+              disabled={isExecuting}
+              className="flex-1 py-2 rounded bg-black hover:bg-zinc-800 text-white font-bold text-xs flex items-center justify-center space-x-2 transition shadow-sm cursor-pointer"
+            >
+              <RotateCcw className={cn('w-3.5 h-3.5', isExecuting && 'animate-spin')} />
+              <span>{isExecuting ? 'Executing Verified Rollback...' : 'Execute Safe Rollback to v1.4.0'}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleUndo}
+              disabled={isExecuting}
+              className="flex-1 py-2 rounded bg-white hover:bg-zinc-50 border border-zinc-300 text-zinc-800 font-bold text-xs flex items-center justify-center space-x-2 transition cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Undo Rollback (Restore 1.5.0)</span>
+            </button>
+          )}
         </div>
       </div>
-
-      {/* Execution Status Log */}
-      {statusMessage && (
-        <div className="px-4 py-2 bg-slate-100 border-t border-slate-200 text-xs font-mono text-slate-700 flex items-center space-x-2">
-          <Zap className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-          <span>{statusMessage}</span>
-        </div>
-      )}
     </div>
   );
 };

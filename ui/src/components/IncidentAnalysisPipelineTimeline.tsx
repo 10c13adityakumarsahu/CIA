@@ -99,133 +99,90 @@ export const IncidentAnalysisPipelineTimeline: React.FC<IncidentAnalysisPipeline
       citation: 'LOG-0001'
     },
     {
-      id: 'synthesis',
-      title: '4. Decision Synthesis & Code-Verified Mitigations',
+      id: 'decision',
+      title: '4. Decision Synthesis & Rollback Plan',
       subtitle: 'Deterministic preconditions & 1-click safe rollback target',
       icon: CheckCircle2,
       status: hasReport ? 'completed' : 'pending',
       details: [
-        'Root Cause Verdict: EXPLOIT (A03:2021-Injection)',
-        'Precondition check: Target v1.4.0 verified free of implicated CVEs (LKG confirmed)',
-        'Mitigation options ranked & ready for execution'
+        'Root Cause Verdict: EXPLOIT (A03:2021-SQL Injection)',
+        'Precondition check: Target v1.4.0 verified clean in Redis release ledger',
+        'Mitigation options ranked & ready for 1-click execution'
       ],
       citation: 'GRAPH:table:customers'
     }
   ];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+    <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs space-y-4 select-none">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
         <div className="flex items-center space-x-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs border border-blue-200">
-            <Activity className="w-4 h-4 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-900 text-sm">
-              Autonomous Incident Investigation Pipeline
-            </h3>
-            <p className="text-xs text-slate-500">
-              Live progression: Security Scanners ➔ Git Code Diff ➔ Gemma 4 Agent ➔ Recovery
-            </p>
-          </div>
+          <Activity className="w-4 h-4 text-black" />
+          <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-900">
+            Autonomous Incident Investigation Pipeline
+          </h3>
         </div>
-
-        <span
-          className={cn(
-            'px-2.5 py-1 rounded-full text-xs font-mono font-bold border flex items-center space-x-1.5',
-            isInvestigating
-              ? 'bg-blue-50 text-blue-700 border-blue-200 animate-pulse'
-              : hasReport
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-slate-50 text-slate-600 border-slate-200'
-          )}
-        >
-          {isInvestigating ? (
-            <>
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-              <span>Analyzing Pipeline Active</span>
-            </>
-          ) : hasReport ? (
-            <>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Pipeline Synthesized</span>
-            </>
-          ) : (
-            <span>Ready for Analysis</span>
-          )}
+        <span className="text-[11px] font-mono text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200 font-semibold">
+          {hasReport ? 'Pipeline Synthesized' : isInvestigating ? 'Gemma Correlating Live Evidence...' : 'Pipeline Ready'}
         </span>
       </div>
 
-      {/* Timeline Steps */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 relative">
+      {/* 4 Pipeline Step Cards in Monochrome */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {steps.map((step, idx) => {
-          const Icon = step.icon;
+          const isCurrent = step.status === 'running';
           const isDone = step.status === 'completed';
-          const isRunning = step.status === 'running';
 
           return (
             <div
               key={step.id}
               className={cn(
-                'p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between space-y-2.5',
-                isDone
-                  ? 'bg-emerald-50/60 border-emerald-200 shadow-xs'
-                  : isRunning
-                  ? 'bg-blue-50/70 border-blue-300 shadow-sm ring-1 ring-blue-400/30'
-                  : 'bg-slate-50/50 border-slate-200 opacity-60'
+                'rounded-lg border p-3.5 flex flex-col justify-between space-y-2.5 transition',
+                isCurrent
+                  ? 'border-black bg-zinc-50 shadow-xs'
+                  : isDone
+                  ? 'border-zinc-300 bg-white'
+                  : 'border-zinc-200 bg-zinc-50/50 opacity-60'
               )}
             >
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center space-x-1.5">
-                    <div
-                      className={cn(
-                        'w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold font-mono',
-                        isDone
-                          ? 'bg-emerald-600 text-white'
-                          : isRunning
-                          ? 'bg-blue-600 text-white animate-pulse'
-                          : 'bg-slate-200 text-slate-600'
-                      )}
-                    >
-                      {isDone ? <Check className="w-3 h-3" /> : idx + 1}
-                    </div>
-                    <span className="font-bold text-slate-900 text-xs truncate max-w-[150px]">
-                      {step.title}
-                    </span>
-                  </div>
-                  {isRunning && <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />}
-                </div>
-
-                <p className="text-[11px] text-slate-500 font-sans leading-relaxed mb-2">
-                  {step.subtitle}
-                </p>
-
-                {/* Details List */}
-                <div className="space-y-1 text-[10px] text-slate-600 font-mono bg-white p-2 rounded-lg border border-slate-200/80">
-                  {step.details.map((d, dIdx) => (
-                    <div key={dIdx} className="flex items-start space-x-1 leading-tight">
-                      <span className="text-blue-500 shrink-0">•</span>
-                      <span className="truncate">{d}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Optional Diff Box */}
-                {step.diffSnippet && (
-                  <div className="mt-2 bg-slate-950 p-2 rounded border border-slate-800 text-[10px] font-mono text-slate-200 overflow-x-auto leading-snug">
-                    <div className="text-[9px] text-slate-400 uppercase mb-1">Git Diff Block:</div>
-                    <pre className="text-red-400 whitespace-pre">{step.diffSnippet.split('\n').slice(0, 2).join('\n')}</pre>
-                    <pre className="text-emerald-400 whitespace-pre">{step.diffSnippet.split('\n').slice(2).join('\n')}</pre>
-                  </div>
+              {/* Step Header */}
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-zinc-900 line-clamp-1">{step.title}</span>
+                {isDone ? (
+                  <Check className="w-3.5 h-3.5 text-black shrink-0" />
+                ) : isCurrent ? (
+                  <Sparkles className="w-3.5 h-3.5 text-black animate-spin shrink-0" />
+                ) : (
+                  <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                 )}
               </div>
 
-              {step.citation && onSelectCitation && (
-                <div className="pt-1 border-t border-slate-200/60 flex items-center justify-between">
-                  <span className="text-[9px] uppercase font-bold text-slate-400">Citation:</span>
-                  <CitationChip citation={step.citation} onClick={onSelectCitation} className="text-[10px]" />
+              {/* Subtitle */}
+              <div className="text-[11px] text-zinc-500 font-sans line-clamp-1">{step.subtitle}</div>
+
+              {/* Details */}
+              <div className="text-[11px] font-mono text-zinc-700 space-y-1 bg-zinc-100/70 p-2 rounded border border-zinc-200/60">
+                {step.details.map((d, dIdx) => (
+                  <div key={dIdx} className="leading-tight line-clamp-1">
+                    • {d}
+                  </div>
+                ))}
+              </div>
+
+              {/* Git Diff Block if present */}
+              {step.diffSnippet && (
+                <div className="bg-black text-white p-2 rounded font-mono text-[10px] overflow-x-auto leading-tight">
+                  <div className="text-zinc-400 font-bold mb-1">GIT DIFF BLOCK:</div>
+                  <pre className="text-zinc-200">{step.diffSnippet}</pre>
+                </div>
+              )}
+
+              {/* Citation Footer */}
+              {step.citation && (
+                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[11px] font-mono">
+                  <span className="text-zinc-400 text-[10px]">CITATION:</span>
+                  <CitationChip citation={step.citation} onClick={onSelectCitation} />
                 </div>
               )}
             </div>

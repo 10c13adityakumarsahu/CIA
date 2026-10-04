@@ -40,8 +40,6 @@ export const CulpritCodeSnippetCard: React.FC<CulpritCodeSnippetCardProps> = ({
       });
   }, [scenario]);
 
-  // Scenario A: SQL Injection in orders()
-  // Scenario B: N+1 DB loop in products()
   const isScenarioB = scenario === 'b_regression';
 
   const snippetData = isScenarioB
@@ -119,28 +117,26 @@ def orders():
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl border border-zinc-200 shadow-xs overflow-hidden flex flex-col select-none">
       {/* Header Bar */}
-      <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-slate-50/70">
-        <div>
-          <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 rounded-lg bg-red-100 text-red-700 flex items-center justify-center font-bold text-xs border border-red-200">
-              <FileCode className="w-4 h-4 text-red-600" />
+      <div className="p-4 border-b border-zinc-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-bold text-xs">
+            <FileCode className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <h3 className="font-bold text-zinc-900 text-xs uppercase tracking-wider">{snippetData.title}</h3>
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-zinc-100 text-zinc-800 border border-zinc-200">
+                {snippetData.cwe}
+              </span>
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h3 className="font-bold text-slate-900 text-sm">{snippetData.title}</h3>
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-red-50 text-red-700 border border-red-200">
-                  {snippetData.cwe}
-                </span>
-              </div>
-              <div className="text-xs text-slate-500 flex items-center space-x-2 mt-0.5">
-                <span className="font-mono text-[11px] font-semibold text-slate-700">{snippetData.file}</span>
-                <span>•</span>
-                <span>{snippetData.lineRange}</span>
-                <span>•</span>
-                <span>{snippetData.owasp}</span>
-              </div>
+            <div className="text-xs text-zinc-500 font-mono flex items-center space-x-2 mt-0.5">
+              <span>{snippetData.file}</span>
+              <span>•</span>
+              <span>{snippetData.lineRange}</span>
+              <span>•</span>
+              <span>{snippetData.owasp}</span>
             </div>
           </div>
         </div>
@@ -151,15 +147,15 @@ def orders():
             <CitationChip citation={snippetData.citation} onClick={onSelectCitation} />
           )}
 
-          <div className="flex bg-slate-200/80 p-0.5 rounded-lg border border-slate-300/60 text-xs">
+          <div className="flex bg-zinc-100 p-0.5 rounded border border-zinc-200 text-xs font-mono">
             <button
               type="button"
               onClick={() => setActiveTab('git_diff')}
               className={cn(
-                'px-2.5 py-1 rounded-md font-medium transition flex items-center space-x-1',
+                'px-2.5 py-0.5 rounded transition flex items-center space-x-1',
                 activeTab === 'git_diff'
-                  ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-black text-white font-bold shadow-xs'
+                  : 'text-zinc-600 hover:text-zinc-900'
               )}
             >
               <GitPullRequest className="w-3 h-3" />
@@ -169,10 +165,10 @@ def orders():
               type="button"
               onClick={() => setActiveTab('diff')}
               className={cn(
-                'px-2.5 py-1 rounded-md font-medium transition flex items-center space-x-1',
+                'px-2.5 py-0.5 rounded transition flex items-center space-x-1',
                 activeTab === 'diff'
-                  ? 'bg-white text-slate-900 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-zinc-900 font-bold shadow-xs'
+                  : 'text-zinc-600 hover:text-zinc-900'
               )}
             >
               <GitCompare className="w-3 h-3" />
@@ -182,10 +178,10 @@ def orders():
               type="button"
               onClick={() => setActiveTab('vulnerable')}
               className={cn(
-                'px-2.5 py-1 rounded-md font-medium transition',
+                'px-2.5 py-0.5 rounded transition',
                 activeTab === 'vulnerable'
-                  ? 'bg-red-50 text-red-800 font-semibold shadow-xs border border-red-200'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-black text-white font-bold shadow-xs'
+                  : 'text-zinc-600 hover:text-zinc-900'
               )}
             >
               Vulnerable Snippet
@@ -194,13 +190,13 @@ def orders():
               type="button"
               onClick={() => setActiveTab('fixed')}
               className={cn(
-                'px-2.5 py-1 rounded-md font-medium transition flex items-center space-x-1',
+                'px-2.5 py-0.5 rounded transition flex items-center space-x-1',
                 activeTab === 'fixed'
-                  ? 'bg-emerald-50 text-emerald-800 font-semibold shadow-xs border border-emerald-200'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-zinc-900 font-bold shadow-xs'
+                  : 'text-zinc-600 hover:text-zinc-900'
               )}
             >
-              <Sparkles className="w-3 h-3 text-emerald-600" />
+              <Sparkles className="w-3 h-3 text-black" />
               <span>Gemma Fix</span>
             </button>
           </div>
@@ -212,18 +208,18 @@ def orders():
         {/* Full Git Code Diff View */}
         {activeTab === 'git_diff' && (
           <div className="md:col-span-2">
-            <div className="flex items-center justify-between px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-t-lg text-xs font-semibold text-blue-900">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 text-white rounded-t text-xs font-mono font-semibold">
               <span className="flex items-center space-x-1.5">
-                <GitPullRequest className="w-3.5 h-3.5 text-blue-600" />
+                <GitPullRequest className="w-3.5 h-3.5" />
                 <span>Git Code Diff: v1.4.0 (Stable LKG) ➔ v1.5.0 (Culprit Release)</span>
               </span>
-              <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.2 rounded text-blue-800 font-bold">
+              <span className="text-[10px] bg-zinc-800 px-1.5 py-0.2 rounded text-zinc-300">
                 target_app/v1.5.0/main.py
               </span>
             </div>
-            <div className="bg-slate-950 p-3 rounded-b-lg border-x border-b border-slate-800 font-mono text-xs overflow-x-auto text-slate-200 leading-relaxed shadow-inner max-h-64">
+            <div className="bg-[#09090B] p-3 rounded-b border border-zinc-900 font-mono text-xs overflow-x-auto text-zinc-200 leading-relaxed max-h-64">
               <pre className="whitespace-pre">
-                {liveDiff || `--- a/target_app/v1.4.0/main.py\n+++ b/target_app/v1.5.0/main.py\n@@ -71,8 +80,18 @@\n-    query = f"SELECT id, price FROM products WHERE sku = '{order.sku}'"\n+    # VULNERABILITY 2 + 3: N+1 unindexed query loop\n+    for item in all_items:\n+        cur.execute("SELECT qty FROM inventory WHERE sku = %s AND warehouse = 'main'", (item.sku,))`}
+                {liveDiff || `--- a/target_app/v1.4.0/main.py\n+++ b/target_app/v1.5.0/main.py\n@@ -71,8 +80,18 @@\n-    query = "SELECT * FROM orders WHERE sku = %s"\n-    c.execute(query, (sku,))\n+    # VULNERABLE: Direct f-string interpolation into raw SQL\n+    query = f"SELECT * FROM orders WHERE sku = '{sku}'"\n+    c.execute(query)`}
               </pre>
             </div>
           </div>
@@ -232,25 +228,25 @@ def orders():
         {/* Left / Vulnerable Code Block */}
         {(activeTab === 'diff' || activeTab === 'vulnerable') && (
           <div className={cn(activeTab === 'vulnerable' && 'md:col-span-2')}>
-            <div className="flex items-center justify-between px-3 py-1.5 bg-red-50 border border-red-200 rounded-t-lg text-xs font-semibold text-red-800">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 text-white rounded-t text-xs font-mono font-semibold">
               <span className="flex items-center space-x-1.5">
-                <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+                <AlertCircle className="w-3.5 h-3.5 text-zinc-300" />
                 <span>Culprit Code Snippet (Current v1.5.0)</span>
               </span>
-              <span className="text-[10px] font-mono bg-red-100 px-1.5 py-0.2 rounded text-red-700">
+              <span className="text-[10px] bg-zinc-800 px-1.5 py-0.2 rounded text-zinc-300">
                 Tainted AST Node
               </span>
             </div>
-            <div className="bg-slate-950 p-3 rounded-b-lg border-x border-b border-slate-800 font-mono text-xs overflow-x-auto text-slate-200 leading-relaxed shadow-inner">
+            <div className="bg-[#09090B] p-3 rounded-b border border-zinc-900 font-mono text-xs overflow-x-auto text-zinc-200 leading-relaxed">
               {snippetData.vulnerableLines.map((line) => (
                 <div
                   key={line.num}
                   className={cn(
                     'flex items-start px-1.5 py-0.5 rounded',
-                    line.isTaint ? 'bg-red-950/80 text-red-200 border-l-2 border-red-500 pl-2' : ''
+                    line.isTaint ? 'bg-zinc-800/90 text-white border-l-2 border-white pl-2 font-bold' : ''
                   )}
                 >
-                  <span className="w-7 shrink-0 text-slate-500 select-none text-[11px]">{line.num}</span>
+                  <span className="w-7 shrink-0 text-zinc-500 select-none text-[11px]">{line.num}</span>
                   <span className="whitespace-pre">{line.text}</span>
                 </div>
               ))}
@@ -261,21 +257,21 @@ def orders():
         {/* Right / Gemma AI Suggested Fix */}
         {(activeTab === 'diff' || activeTab === 'fixed') && (
           <div className={cn(activeTab === 'fixed' && 'md:col-span-2')}>
-            <div className="flex items-center justify-between px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-t-lg text-xs font-semibold text-emerald-800">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 text-white rounded-t text-xs font-mono font-semibold">
               <span className="flex items-center space-x-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <Sparkles className="w-3.5 h-3.5 text-zinc-300" />
                 <span>Gemma 4 AI Recommended Remediation</span>
               </span>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="px-2 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-semibold flex items-center space-x-1 transition cursor-pointer"
+                className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-semibold flex items-center space-x-1 transition cursor-pointer"
               >
-                {copied ? <Check className="w-3 h-3 text-emerald-700" /> : <Copy className="w-3 h-3 text-emerald-700" />}
+                {copied ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3 text-zinc-300" />}
                 <span>{copied ? 'Copied!' : 'Copy Code'}</span>
               </button>
             </div>
-            <div className="bg-slate-950 p-3 rounded-b-lg border-x border-b border-slate-800 font-mono text-xs overflow-x-auto text-emerald-300 leading-relaxed shadow-inner">
+            <div className="bg-[#09090B] p-3 rounded-b border border-zinc-900 font-mono text-xs overflow-x-auto text-zinc-200 leading-relaxed">
               <pre className="whitespace-pre">{snippetData.fixedCode}</pre>
             </div>
           </div>
@@ -283,16 +279,16 @@ def orders():
       </div>
 
       {/* Gemma AI Explanation Footer */}
-      <div className="mx-4 mb-4 p-3 bg-blue-50/70 border border-blue-200 rounded-lg flex items-start space-x-3 text-xs text-slate-700">
-        <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+      <div className="mx-4 mb-4 p-3 bg-zinc-50 border border-zinc-200 rounded flex items-start space-x-3 text-xs text-zinc-800">
+        <Sparkles className="w-4 h-4 text-black shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <div className="font-bold text-blue-900 flex items-center space-x-1.5">
+          <div className="font-bold text-zinc-900 flex items-center space-x-1.5 font-mono">
             <span>Gemma RCA & Verification Rationale</span>
-            <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[10px] font-mono">
-              AST AST-Check Verified
+            <span className="px-1.5 py-0.2 rounded bg-zinc-200 text-zinc-800 text-[10px]">
+              AST Checked
             </span>
           </div>
-          <p className="text-slate-600 leading-relaxed font-sans">
+          <p className="text-zinc-600 leading-relaxed font-sans">
             {snippetData.explanation}
           </p>
         </div>
