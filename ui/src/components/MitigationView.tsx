@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { GatewayState, Mitigation, RejectedOption, PreconditionCheck } from '../types';
 import { CitationChip } from './CitationChip';
-import { RollbackControlCard } from './RollbackControlCard';
 import {
   ShieldCheck,
   AlertOctagon,
@@ -11,10 +10,9 @@ import {
   XCircle,
   Eye,
   Check,
-  Sparkles,
-  Ban,
   Activity,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { previewMitigation, executeMitigation, undoMitigation, subscribeMitigationVerify } from '../lib/api';
@@ -112,30 +110,24 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col space-y-5 overflow-y-auto p-6 select-text">
-      {/* 1-Click Verified Rollback Controller */}
-      <RollbackControlCard
-        state={state}
-        onMitigationExecuted={onMitigationExecuted}
-      />
-
+    <div className="h-full flex flex-col space-y-4 select-text">
       {/* Recovery Verification Live Status Banner */}
       {(verifyStatus.running || verifyStatus.verdict) && (
-        <div className="bg-white border border-blue-300 rounded-xl p-5 shadow-sm space-y-3 animate-in fade-in">
+        <div className="bg-zinc-50 border border-zinc-300 rounded-xl p-4 shadow-xs space-y-3 animate-in fade-in font-mono">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Activity className="w-4 h-4 text-blue-600 animate-pulse" />
-              <span className="font-bold text-xs uppercase tracking-wider text-slate-800">
-                Live Mitigation Recovery Verification (30s Telemetry Window)
+              <Activity className="w-4 h-4 text-black animate-pulse" />
+              <span className="font-bold text-xs uppercase tracking-wider text-zinc-900">
+                Live Mitigation Verification (30s Telemetry Window)
               </span>
             </div>
             {verifyStatus.verdict && (
               <span
                 className={cn(
-                  'px-2.5 py-1 rounded text-xs font-mono font-bold uppercase',
+                  'px-2 py-0.5 rounded text-xs font-mono font-bold uppercase',
                   verifyStatus.verdict.status === 'recovered'
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                    : 'bg-red-100 text-red-800 border border-red-200'
+                    ? 'bg-black text-white'
+                    : 'bg-zinc-200 text-zinc-800'
                 )}
               >
                 VERDICT: {verifyStatus.verdict.status}
@@ -147,22 +139,22 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
             {verifyStatus.samples.map((s) => (
               <div
                 key={s.step}
-                className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs font-mono"
+                className="bg-white p-2 rounded border border-zinc-200 text-xs font-mono"
               >
-                <div className="text-slate-500 text-[10px]">T+{s.step * 5}s</div>
-                <div className="text-blue-600 font-bold">{Math.round(s.p95_ms)}ms</div>
-                <div className="text-slate-600">{(s.err_rate * 100).toFixed(1)}% err</div>
+                <div className="text-zinc-500 text-[10px]">T+{s.step * 5}s</div>
+                <div className="text-zinc-900 font-bold">{Math.round(s.p95_ms)}ms</div>
+                <div className="text-zinc-600">{(s.err_rate * 100).toFixed(1)}% err</div>
               </div>
             ))}
           </div>
 
           {verifyStatus.verdict && (
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <span className="text-xs text-slate-700 font-medium">{verifyStatus.verdict.message}</span>
+            <div className="flex items-center justify-between pt-2 border-t border-zinc-200">
+              <span className="text-xs text-zinc-800 font-medium">{verifyStatus.verdict.message}</span>
               <button
                 type="button"
                 onClick={handleUndo}
-                className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-md text-xs font-mono font-semibold flex items-center space-x-1 transition cursor-pointer"
+                className="px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-900 border border-zinc-300 rounded text-xs font-mono font-semibold flex items-center space-x-1 transition cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Undo Mitigation</span>
@@ -173,23 +165,23 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
       )}
 
       {/* Ranked Mitigations List */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center">
-            <ShieldCheck className="w-4 h-4 mr-1.5 text-emerald-600" />
+          <span className="text-xs font-bold uppercase tracking-wider text-zinc-900 flex items-center font-mono">
+            <ShieldCheck className="w-4 h-4 mr-1.5 text-black" />
             Proposed Mitigation Actions (Ranked by Safety & Precision)
           </span>
-          <span className="text-xs font-mono text-slate-500">
+          <span className="text-[11px] font-mono text-zinc-500">
             Model proposes; Code verifies; Human approves
           </span>
         </div>
 
         {safeMitigations.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-8 text-center text-xs font-mono text-slate-500 shadow-xs">
+          <div className="bg-white border border-zinc-200 rounded-xl p-8 text-center text-xs font-mono text-zinc-500 shadow-xs">
             No mitigations proposed yet. Start an investigation to generate code-verified actions.
           </div>
         ) : (
-          <div className="space-y-3.5">
+          <div className="space-y-3">
             {safeMitigations.map((mit) => {
               const isApplied = appliedAction === mit.action;
               const allPreconditionsSatisfied = mit.preconditions?.every(p => p.satisfied) ?? true;
@@ -198,36 +190,36 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
                 <div
                   key={mit.action}
                   className={cn(
-                    'bg-white border rounded-xl p-5 shadow-xs space-y-4 transition',
+                    'bg-white border rounded-xl p-4 shadow-xs space-y-3.5 transition',
                     isApplied
-                      ? 'border-emerald-500 ring-2 ring-emerald-100'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-black ring-1 ring-zinc-400'
+                      : 'border-zinc-200 hover:border-zinc-300'
                   )}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
+                        <span className="w-5 h-5 rounded bg-black text-white font-bold text-[11px] font-mono flex items-center justify-center shrink-0">
                           #{mit.rank}
                         </span>
-                        <h3 className="text-sm font-bold text-slate-900">{mit.title}</h3>
-                        <span className="text-xs font-mono uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                        <h3 className="text-xs font-bold text-zinc-900 uppercase font-mono">{mit.title}</h3>
+                        <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-800 border border-zinc-200">
                           {mit.action}
                         </span>
                         {isApplied && (
-                          <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold">
+                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black text-white font-bold">
                             APPLIED
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-600">{mit.rationale}</p>
+                      <p className="text-xs text-zinc-600 leading-relaxed">{mit.rationale}</p>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => handlePreview(mit)}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-medium flex items-center space-x-1.5 transition"
+                        className="px-2.5 py-1 rounded border border-zinc-200 bg-zinc-50 text-zinc-700 hover:bg-zinc-100 text-xs font-medium flex items-center space-x-1 transition cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Preview</span>
@@ -238,12 +230,12 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
                         disabled={!allPreconditionsSatisfied || executingAction === mit.action || isApplied}
                         onClick={() => handleExecute(mit)}
                         className={cn(
-                          'px-4 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition shadow-xs',
+                          'px-3 py-1 rounded text-xs font-bold font-mono flex items-center space-x-1.5 transition cursor-pointer shadow-xs',
                           !allPreconditionsSatisfied
-                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                            ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed border border-zinc-200'
                             : isApplied
-                            ? 'bg-emerald-600 text-white cursor-default'
-                            : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-98'
+                            ? 'bg-zinc-800 text-white cursor-default'
+                            : 'bg-black hover:bg-zinc-800 text-white active:scale-98'
                         )}
                       >
                         <Play className="w-3.5 h-3.5" />
@@ -253,40 +245,40 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
                   </div>
 
                   {/* Expected Effect & Risk */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-zinc-50 p-2.5 rounded border border-zinc-200 font-mono">
                     <div>
-                      <span className="text-slate-500 font-semibold">Expected Effect: </span>
-                      <span className="text-emerald-700 font-medium">{mit.expected_effect}</span>
+                      <span className="text-zinc-500 font-semibold">Expected Effect: </span>
+                      <span className="text-zinc-900 font-bold">{mit.expected_effect}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 font-semibold">Risk Assessment: </span>
-                      <span className="text-amber-700 font-medium">{mit.risk}</span>
+                      <span className="text-zinc-500 font-semibold">Risk Assessment: </span>
+                      <span className="text-zinc-800 font-medium">{mit.risk}</span>
                     </div>
                   </div>
 
                   {/* Preconditions Checklist */}
                   {mit.preconditions && mit.preconditions.length > 0 && (
                     <div className="space-y-1.5">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-mono">
                         Code-Enforced Preconditions Checklist
                       </span>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 font-mono text-xs">
                         {mit.preconditions.map((p) => (
                           <div
                             key={p.name}
-                            className={cn(
-                              'p-2 rounded-lg border flex items-center justify-between',
-                              p.satisfied
-                                ? 'bg-emerald-50/80 border-emerald-200 text-emerald-800'
-                                : 'bg-red-50/80 border-red-200 text-red-800'
-                            )}
+                            className="p-1.5 rounded border border-zinc-200 bg-white flex items-center justify-between text-zinc-800"
                           >
-                            <span className="truncate">{p.name}: {p.detail}</span>
-                            {p.satisfied ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 ml-2" />
-                            ) : (
-                              <XCircle className="w-3.5 h-3.5 text-red-600 shrink-0 ml-2" />
-                            )}
+                            <span className="truncate text-[11px]">{p.name}: {p.detail}</span>
+                            <span
+                              className={cn(
+                                'text-[9px] px-1 py-0.2 rounded font-bold shrink-0 ml-2',
+                                p.satisfied
+                                  ? 'bg-black text-white'
+                                  : 'bg-zinc-200 text-zinc-700'
+                              )}
+                            >
+                              {p.satisfied ? 'PASS' : 'FAIL'}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -301,23 +293,23 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
 
       {/* Preview Diff Modal */}
       {previewData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                <Eye className="w-4 h-4 text-blue-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="w-full max-w-2xl bg-white border border-zinc-200 rounded-xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <h3 className="text-xs font-bold text-zinc-900 uppercase font-mono flex items-center space-x-2">
+                <Eye className="w-4 h-4 text-black" />
                 <span>Execution Preview Diff ({previewData.action})</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setPreviewData(null)}
-                className="text-slate-400 hover:text-slate-700"
+                className="text-zinc-400 hover:text-zinc-700 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <pre className="p-4 rounded-lg bg-slate-50 border border-slate-200 font-mono text-xs text-slate-800 overflow-x-auto whitespace-pre-wrap max-h-80">
+            <pre className="p-4 rounded bg-[#09090B] border border-zinc-900 font-mono text-xs text-zinc-200 overflow-x-auto whitespace-pre-wrap max-h-80">
               {previewData.diff}
             </pre>
 
@@ -325,7 +317,7 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
               <button
                 type="button"
                 onClick={() => setPreviewData(null)}
-                className="px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                className="px-4 py-1.5 rounded bg-black text-white text-xs font-mono font-bold cursor-pointer hover:bg-zinc-800"
               >
                 Close Preview
               </button>
@@ -334,12 +326,12 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
         </div>
       )}
 
-      {/* Rejected Options */}
+      {/* Rejected Options (Guardrail Enforcement) */}
       {safeRejected.length > 0 && (
-        <div className="bg-white border border-red-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-xs space-y-3 font-mono">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-red-700 flex items-center">
-              <Ban className="w-4 h-4 mr-1.5 text-red-600" />
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-900 flex items-center">
+              <ShieldAlert className="w-4 h-4 mr-1.5 text-black" />
               Rejected Options (Guardrail Enforcement)
             </span>
           </div>
@@ -348,17 +340,17 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
             {safeRejected.map((opt) => (
               <div
                 key={opt.action}
-                className="p-3.5 rounded-lg bg-red-50/60 border border-red-200 flex flex-col space-y-1.5"
+                className="p-3 rounded-lg bg-zinc-50 border border-zinc-200 flex flex-col space-y-1.5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-xs uppercase text-red-800">
+                  <span className="font-mono font-bold text-xs uppercase text-zinc-900">
                     {opt.action}
                   </span>
-                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-red-100 text-red-800 border border-red-200 font-bold">
+                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-zinc-200 text-zinc-800 border border-zinc-300 font-bold">
                     REJECTED BY VERIFIER
                   </span>
                 </div>
-                <p className="text-xs text-slate-700">{opt.why}</p>
+                <p className="text-xs text-zinc-700 font-sans">{opt.why}</p>
                 {opt.citations && opt.citations.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-1">
                     {opt.citations.map((cite, idx) => (

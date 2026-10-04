@@ -29,17 +29,17 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
       { id: 'db_orders', label: 'Table: orders', type: 'table', impact: 'confirmed', pos: [720, 340] },
     ];
 
-    // Helper for impact coloring (light theme)
+    // Helper for impact styling (clean monochrome)
     const getImpactStyle = (impact: NodeImpact) => {
       switch (impact) {
         case 'confirmed':
-          return { border: 'border-red-300 bg-red-50/90', badge: 'bg-red-100 text-red-800 border-red-200', dot: 'bg-red-500' };
+          return { border: 'border-black bg-white shadow-xs', badge: 'bg-black text-white font-bold', tag: 'CRITICAL' };
         case 'likely':
-          return { border: 'border-amber-300 bg-amber-50/90', badge: 'bg-amber-100 text-amber-800 border-amber-200', dot: 'bg-amber-500' };
+          return { border: 'border-zinc-500 bg-white shadow-xs', badge: 'bg-zinc-800 text-white font-semibold', tag: 'STARVED' };
         case 'possible':
-          return { border: 'border-yellow-300 bg-yellow-50/90', badge: 'bg-yellow-100 text-yellow-800 border-yellow-200', dot: 'bg-yellow-500' };
+          return { border: 'border-zinc-300 bg-white shadow-xs', badge: 'bg-zinc-100 text-zinc-800 border border-zinc-200', tag: 'REACHABLE' };
         default:
-          return { border: 'border-slate-200 bg-white', badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
+          return { border: 'border-zinc-200 bg-zinc-50/50', badge: 'bg-zinc-100 text-zinc-500 border border-zinc-200', tag: 'NOMINAL' };
       }
     };
 
@@ -62,13 +62,15 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
         position: { x: n.pos[0], y: n.pos[1] },
         data: {
           label: (
-            <div className={`p-3 rounded-xl border-2 ${style.border} text-xs font-mono w-56 text-left shadow-sm backdrop-blur-sm`}>
+            <div className={`p-3 rounded-lg border-2 ${style.border} text-xs font-mono w-56 text-left`}>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-slate-800 font-bold truncate text-[11px]">{n.label}</span>
-                <span className={`w-2.5 h-2.5 rounded-full ${style.dot}`} />
+                <span className="text-zinc-900 font-bold truncate text-[11px]">{n.label}</span>
+                <span className="text-[9px] font-mono text-zinc-400 uppercase font-semibold">
+                  {style.tag}
+                </span>
               </div>
-              <div className="flex items-center justify-between mt-2">
-                <span className={`text-[10px] uppercase font-mono font-semibold px-1.5 py-0.5 rounded border ${style.badge}`}>
+              <div className="flex items-center justify-between mt-2 pt-1 border-t border-zinc-100">
+                <span className={`text-[10px] uppercase font-mono px-1.5 py-0.2 rounded ${style.badge}`}>
                   {impact}
                 </span>
                 {cite && (
@@ -82,28 +84,28 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
     });
 
     const flowEdges: Edge[] = [
-      { id: 'e-gw-orders', source: 'gw', target: 'r_orders', animated: true, style: { stroke: '#0284C7' } },
-      { id: 'e-gw-prod', source: 'gw', target: 'r_products', animated: true, style: { stroke: '#0284C7' } },
-      { id: 'e-orders-fn', source: 'r_orders', target: 'fn_orders', animated: true, style: { stroke: '#DC2626' } },
-      { id: 'e-orders-pool', source: 'r_orders', target: 'pool', animated: true, style: { stroke: '#D97706' } },
-      { id: 'e-prod-pool', source: 'r_products', target: 'pool', animated: true, style: { stroke: '#D97706' } },
-      { id: 'e-fn-cust', source: 'fn_orders', target: 'db_customers', animated: true, style: { stroke: '#CA8A04' } },
-      { id: 'e-fn-pay', source: 'fn_orders', target: 'db_payments', animated: true, style: { stroke: '#CA8A04' } },
-      { id: 'e-fn-ord', source: 'fn_orders', target: 'db_orders', animated: true, style: { stroke: '#DC2626' } },
-      { id: 'e-pool-inv', source: 'pool', target: 'db_inventory', animated: true, style: { stroke: '#D97706' } },
+      { id: 'e-gw-orders', source: 'gw', target: 'r_orders', animated: true, style: { stroke: '#18181b', strokeWidth: 2 } },
+      { id: 'e-gw-prod', source: 'gw', target: 'r_products', animated: true, style: { stroke: '#71717a', strokeWidth: 1.5 } },
+      { id: 'e-orders-fn', source: 'r_orders', target: 'fn_orders', animated: true, style: { stroke: '#18181b', strokeWidth: 2 } },
+      { id: 'e-orders-pool', source: 'r_orders', target: 'pool', animated: true, style: { stroke: '#18181b', strokeWidth: 2 } },
+      { id: 'e-prod-pool', source: 'r_products', target: 'pool', animated: true, style: { stroke: '#71717a', strokeWidth: 1.5 } },
+      { id: 'e-fn-cust', source: 'fn_orders', target: 'db_customers', animated: false, style: { stroke: '#a1a1aa', strokeDasharray: '4 4' } },
+      { id: 'e-fn-pay', source: 'fn_orders', target: 'db_payments', animated: false, style: { stroke: '#a1a1aa', strokeDasharray: '4 4' } },
+      { id: 'e-fn-ord', source: 'fn_orders', target: 'db_orders', animated: true, style: { stroke: '#18181b', strokeWidth: 2 } },
+      { id: 'e-pool-inv', source: 'pool', target: 'db_inventory', animated: true, style: { stroke: '#71717a', strokeWidth: 1.5 } },
     ];
 
     return { nodes: flowNodes, edges: flowEdges };
   }, [blastRadius, onSelectCitation]);
 
   return (
-    <div className="w-full h-full bg-[#F8FAFC] relative">
-      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur border border-slate-200 px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 shadow-sm flex items-center space-x-3">
-        <span className="font-bold text-slate-900">Blast Radius Graph</span>
-        <div className="flex items-center space-x-2.5 text-[11px]">
-          <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-red-500 mr-1" /> Confirmed</span>
-          <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-amber-500 mr-1" /> Likely</span>
-          <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-yellow-500 mr-1" /> Possible</span>
+    <div className="w-full h-full bg-[#FAFAFA] relative">
+      <div className="absolute top-4 left-4 z-10 bg-white border border-zinc-200 px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium text-zinc-800 shadow-xs flex items-center space-x-3">
+        <span className="font-bold text-zinc-900 uppercase tracking-wider text-[11px]">Blast Radius Graph</span>
+        <div className="flex items-center space-x-2 text-[10px]">
+          <span className="px-1.5 py-0.2 bg-black text-white rounded font-bold">CONFIRMED</span>
+          <span className="px-1.5 py-0.2 bg-zinc-800 text-white rounded font-semibold">LIKELY</span>
+          <span className="px-1.5 py-0.2 bg-zinc-100 text-zinc-700 border border-zinc-200 rounded">POSSIBLE</span>
         </div>
       </div>
       <ReactFlow
@@ -111,10 +113,10 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
         edges={edges}
         fitView
         nodesDraggable={true}
-        className="bg-[#F8FAFC]"
+        className="bg-[#FAFAFA]"
       >
-        <Background color="#CBD5E1" gap={16} />
-        <Controls className="bg-white border border-slate-200 fill-slate-700 shadow-sm rounded-lg" />
+        <Background color="#E4E4E7" gap={16} />
+        <Controls className="bg-white border border-zinc-200 fill-zinc-800 shadow-xs rounded" />
       </ReactFlow>
     </div>
   );

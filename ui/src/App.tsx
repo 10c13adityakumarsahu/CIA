@@ -263,31 +263,27 @@ export function App() {
           onExportReport={() => setIsExportOpen(true)}
         />
 
-        {/* Guided Workflow Phase Bar */}
-        <div className="bg-white border-b border-zinc-200 px-6 py-2.5 flex items-center justify-between shadow-xs shrink-0">
+        {/* Guided Workflow Phase Bar - Clean Monochrome, No Emoticons, No Dots */}
+        <div className="bg-white border-b border-zinc-200 px-6 py-2.5 flex items-center justify-between shadow-xs shrink-0 font-mono text-xs">
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-bold">
+              <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">
                 INCIDENT STATUS:
               </span>
               {isRecovered ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold bg-black text-white">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mr-1.5" />
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-black text-white">
                   RECOVERED (100% v1.4.0 LKG)
                 </span>
               ) : report ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold bg-black text-white">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400 mr-1.5" />
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-black text-white">
                   RCA SYNTHESIZED (CWE-89 SQLi)
                 </span>
               ) : isDegraded ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold bg-black text-white">
-                  <span className="w-2 h-2 rounded-full bg-red-500 mr-1.5 animate-pulse" />
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-black text-white">
                   ATTACK INJECTED (DB Contention)
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-zinc-100 text-zinc-800 border border-zinc-200">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5" />
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-800 border border-zinc-200">
                   SYSTEM NOMINAL (Baseline)
                 </span>
               )}
@@ -296,7 +292,7 @@ export function App() {
             <div className="h-4 w-px bg-zinc-200 hidden sm:block" />
 
             {/* Context Guidance Message */}
-            <div className="text-xs text-zinc-600 hidden md:block">
+            <div className="text-xs text-zinc-600 hidden md:block font-sans">
               {isRecovered ? (
                 <span>Gateway routed 100% traffic to stable LKG. Latency &lt; 20ms and 0% errors.</span>
               ) : report ? (
@@ -317,37 +313,34 @@ export function App() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold transition cursor-pointer shadow-xs"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset to Baseline</span>
+                Reset to Baseline
               </button>
             ) : report ? (
               <button
                 type="button"
                 onClick={() => setCurrentTab('recovery')}
-                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold transition cursor-pointer shadow-xs"
               >
-                <span>Execute Rollback →</span>
+                Execute Rollback
               </button>
             ) : isDegraded ? (
               <button
                 type="button"
                 onClick={handleInvestigate}
                 disabled={isInvestigating}
-                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold transition cursor-pointer shadow-xs"
               >
-                <Sparkles className={cn('w-3.5 h-3.5', isInvestigating && 'animate-spin')} />
-                <span>{isInvestigating ? 'Gemma Investigating...' : 'Analyze with Gemma 4'}</span>
+                {isInvestigating ? 'Analyzing...' : 'Analyze with Gemma 4'}
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => handleSelectScenario('a_exploit')}
-                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold transition cursor-pointer shadow-xs"
               >
-                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                <span>Initiate Whitebox Attack</span>
+                Initiate Whitebox Attack
               </button>
             )}
           </div>
@@ -417,7 +410,7 @@ export function App() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
                     <div className="flex items-center space-x-2">
-                      <Sparkles className="w-4 h-4 text-black" />
+                      <Shield className="w-4 h-4 text-black" />
                       <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-900 font-mono">
                         Gemma 4 Root Cause Verdict
                       </h3>

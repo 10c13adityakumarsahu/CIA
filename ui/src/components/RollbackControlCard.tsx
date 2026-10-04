@@ -105,7 +105,6 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
               : 'bg-zinc-100 text-zinc-800 border-zinc-200'
           )}
         >
-          <span className={cn('w-1.5 h-1.5 rounded-full mr-1', isRolledBack ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse')} />
           <span>{isRolledBack ? 'ACTIVE: v1.4.0 (100% Green)' : 'ACTIVE: v1.5.0 (100% Blue)'}</span>
         </span>
       </div>

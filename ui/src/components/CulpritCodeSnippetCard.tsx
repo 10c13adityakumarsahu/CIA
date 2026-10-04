@@ -57,7 +57,7 @@ export const CulpritCodeSnippetCard: React.FC<CulpritCodeSnippetCardProps> = ({
           { num: 75, text: '        c = conn.cursor()' },
           { num: 76, text: '        c.execute("SELECT id, name, category FROM products")' },
           { num: 77, text: '        products = c.fetchall()' },
-          { num: 78, text: '        # ⚠️ REGRESSION: N+1 nested query per product row inside loop', isTaint: true },
+          { num: 78, text: '        # [REGRESSION]: N+1 nested query per product row inside loop', isTaint: true },
           { num: 79, text: '        for p in products:', isTaint: true },
           { num: 80, text: '            c.execute(f"SELECT stock, warehouse FROM inventory WHERE product_id = {p[0]}")', isTaint: true },
           { num: 81, text: '            p["inventory"] = c.fetchone()', isTaint: true },
@@ -67,7 +67,7 @@ export const CulpritCodeSnippetCard: React.FC<CulpritCodeSnippetCardProps> = ({
 def get_products():
     with db_pool.getconn() as conn:
         c = conn.cursor()
-        # ✅ FIX: Single JOIN query prevents pool connection exhaustion
+        # [REMEDIATION]: Single JOIN query prevents pool connection exhaustion
         query = """
             SELECT p.id, p.name, p.category, i.stock, i.warehouse 
             FROM products p 
@@ -91,7 +91,7 @@ def get_products():
           { num: 50, text: '    sku = request.json.get("sku", "")' },
           { num: 51, text: '    with db_pool.getconn() as conn:' },
           { num: 52, text: '        c = conn.cursor()' },
-          { num: 53, text: '        # ⚠️ VULNERABLE: Direct f-string interpolation into raw SQL', isTaint: true },
+          { num: 53, text: '        # [VULNERABLE]: Direct f-string interpolation into raw SQL', isTaint: true },
           { num: 54, text: '        query = f"SELECT * FROM orders WHERE sku = \'{sku}\'"', isTaint: true },
           { num: 55, text: '        c.execute(query)', isTaint: true },
           { num: 56, text: '        rows = c.fetchall()' },
@@ -102,7 +102,7 @@ def orders():
     sku = request.json.get("sku", "")
     with db_pool.getconn() as conn:
         c = conn.cursor()
-        # ✅ FIX: Parameterized SQL Query (prevents SQL injection)
+        # [REMEDIATION]: Parameterized SQL Query (prevents SQL injection)
         query = "SELECT * FROM orders WHERE sku = %s"
         c.execute(query, (sku,))
         rows = c.fetchall()
@@ -119,19 +119,19 @@ def orders():
   return (
     <div className="bg-white rounded-xl border border-zinc-200 shadow-xs overflow-hidden flex flex-col select-none">
       {/* Header Bar */}
-      <div className="p-4 border-b border-zinc-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white">
-        <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-bold text-xs">
+      <div className="p-3.5 border-b border-zinc-100 flex flex-wrap items-center justify-between gap-2.5 bg-white">
+        <div className="flex items-center space-x-2.5 min-w-0">
+          <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-bold text-xs shrink-0">
             <FileCode className="w-4 h-4" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center space-x-2">
-              <h3 className="font-bold text-zinc-900 text-xs uppercase tracking-wider">{snippetData.title}</h3>
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-zinc-100 text-zinc-800 border border-zinc-200">
+              <h3 className="font-bold text-zinc-900 text-xs uppercase tracking-wider truncate">{snippetData.title}</h3>
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-zinc-100 text-zinc-800 border border-zinc-200 shrink-0">
                 {snippetData.cwe}
               </span>
             </div>
-            <div className="text-xs text-zinc-500 font-mono flex items-center space-x-2 mt-0.5">
+            <div className="text-[11px] text-zinc-500 font-mono flex items-center space-x-2 mt-0.5 truncate">
               <span>{snippetData.file}</span>
               <span>•</span>
               <span>{snippetData.lineRange}</span>
@@ -142,17 +142,17 @@ def orders():
         </div>
 
         {/* View Switcher Tabs & Citation */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 shrink-0">
           {snippetData.citation && onSelectCitation && (
             <CitationChip citation={snippetData.citation} onClick={onSelectCitation} />
           )}
 
-          <div className="flex bg-zinc-100 p-0.5 rounded border border-zinc-200 text-xs font-mono">
+          <div className="flex bg-zinc-100 p-0.5 rounded border border-zinc-200 text-xs font-mono shrink-0">
             <button
               type="button"
               onClick={() => setActiveTab('git_diff')}
               className={cn(
-                'px-2.5 py-0.5 rounded transition flex items-center space-x-1',
+                'px-2.5 py-1 rounded transition flex items-center space-x-1.5 shrink-0 whitespace-nowrap cursor-pointer',
                 activeTab === 'git_diff'
                   ? 'bg-black text-white font-bold shadow-xs'
                   : 'text-zinc-600 hover:text-zinc-900'
@@ -165,7 +165,7 @@ def orders():
               type="button"
               onClick={() => setActiveTab('diff')}
               className={cn(
-                'px-2.5 py-0.5 rounded transition flex items-center space-x-1',
+                'px-2.5 py-1 rounded transition flex items-center space-x-1.5 shrink-0 whitespace-nowrap cursor-pointer',
                 activeTab === 'diff'
                   ? 'bg-white text-zinc-900 font-bold shadow-xs'
                   : 'text-zinc-600 hover:text-zinc-900'
@@ -178,7 +178,7 @@ def orders():
               type="button"
               onClick={() => setActiveTab('vulnerable')}
               className={cn(
-                'px-2.5 py-0.5 rounded transition',
+                'px-2.5 py-1 rounded transition shrink-0 whitespace-nowrap cursor-pointer',
                 activeTab === 'vulnerable'
                   ? 'bg-black text-white font-bold shadow-xs'
                   : 'text-zinc-600 hover:text-zinc-900'
@@ -190,13 +190,13 @@ def orders():
               type="button"
               onClick={() => setActiveTab('fixed')}
               className={cn(
-                'px-2.5 py-0.5 rounded transition flex items-center space-x-1',
+                'px-2.5 py-1 rounded transition flex items-center space-x-1.5 shrink-0 whitespace-nowrap cursor-pointer',
                 activeTab === 'fixed'
                   ? 'bg-white text-zinc-900 font-bold shadow-xs'
                   : 'text-zinc-600 hover:text-zinc-900'
               )}
             >
-              <Sparkles className="w-3 h-3 text-black" />
+              <ShieldCheck className="w-3 h-3 text-black" />
               <span>Gemma Fix</span>
             </button>
           </div>
@@ -259,7 +259,7 @@ def orders():
           <div className={cn(activeTab === 'fixed' && 'md:col-span-2')}>
             <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 text-white rounded-t text-xs font-mono font-semibold">
               <span className="flex items-center space-x-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-zinc-300" />
+                <ShieldCheck className="w-3.5 h-3.5 text-zinc-300" />
                 <span>Gemma 4 AI Recommended Remediation</span>
               </span>
               <button
@@ -280,7 +280,7 @@ def orders():
 
       {/* Gemma AI Explanation Footer */}
       <div className="mx-4 mb-4 p-3 bg-zinc-50 border border-zinc-200 rounded flex items-start space-x-3 text-xs text-zinc-800">
-        <Sparkles className="w-4 h-4 text-black shrink-0 mt-0.5" />
+        <ShieldCheck className="w-4 h-4 text-black shrink-0 mt-0.5" />
         <div className="space-y-1">
           <div className="font-bold text-zinc-900 flex items-center space-x-1.5 font-mono">
             <span>Gemma RCA & Verification Rationale</span>

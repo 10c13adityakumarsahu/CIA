@@ -1,17 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Activity,
   Shield,
   FileCode,
   Database,
-  ShieldCheck,
-  CheckCircle2,
-  AlertTriangle,
-  Zap,
-  RotateCcw,
-  Sparkles,
-  Server,
-  Layers
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GatewayState } from '../types';
@@ -46,37 +39,33 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       id: 'telemetry' as MainViewTab,
       step: '1',
       label: 'Telemetry & Multi-API',
-      description: 'Task-Manager stream & API percentiles',
+      description: 'Live task-manager streaming buffer',
       icon: Activity,
       badge: isDegraded ? 'Critical' : 'Live',
-      badgeColor: isDegraded ? 'bg-red-500 text-white' : 'bg-zinc-100 text-zinc-800'
     },
     {
       id: 'scans' as MainViewTab,
       step: '2',
-      label: 'Security Scans',
-      description: 'SAST, SCA, DAST, WAF findings',
+      label: 'Security Scanners',
+      description: 'SAST, SCA, DAST ingestion',
       icon: Shield,
-      badge: '20 CVEs',
-      badgeColor: 'bg-zinc-100 text-zinc-800'
+      badge: '20 Scans',
     },
     {
       id: 'code_diff' as MainViewTab,
       step: '3',
       label: 'Gemma RCA & Code Diff',
-      description: 'Unified Git diff & AI remediation',
+      description: 'Unified Git diff & AI patch',
       icon: FileCode,
       badge: hasReport ? 'Synthesized' : 'Ready',
-      badgeColor: hasReport ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-700'
     },
     {
       id: 'blast_radius' as MainViewTab,
       step: '4',
       label: 'Blast Radius Impact',
-      description: 'Cascading pool starvation map',
+      description: 'Cascading pool contention map',
       icon: Database,
-      badge: isDegraded ? 'Cascading' : 'Mapped',
-      badgeColor: isDegraded ? 'bg-amber-500 text-white' : 'bg-zinc-100 text-zinc-700'
+      badge: isDegraded ? 'Degraded' : 'Mapped',
     },
     {
       id: 'recovery' as MainViewTab,
@@ -85,7 +74,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       description: '1-click safe rollback to v1.4.0',
       icon: ShieldCheck,
       badge: isRecovered ? '100% LKG' : 'Failover',
-      badgeColor: isRecovered ? 'bg-emerald-600 text-white' : 'bg-zinc-100 text-zinc-700'
     },
   ];
 
@@ -94,23 +82,21 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
   return (
     <aside className="w-64 h-full bg-white border-r border-zinc-200 flex flex-col justify-between select-none shrink-0 z-30">
-      {/* Top Header / Branding */}
+      {/* Brand Header */}
       <div>
-        <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-black font-mono text-sm">
-              C
+        <div className="p-4 border-b border-zinc-200 flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-black font-mono text-sm">
+            C
+          </div>
+          <div>
+            <div className="flex items-center space-x-1.5">
+              <span className="font-bold text-zinc-900 text-sm tracking-tight">CULPRIT</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-700 border border-zinc-200 font-bold">
+                v1.5
+              </span>
             </div>
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="font-bold text-zinc-900 text-sm tracking-tight">CULPRIT</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-700 border border-zinc-200 font-bold">
-                  v1.5
-                </span>
-              </div>
-              <div className="text-[11px] text-zinc-500">
-                Root-Cause Decision Engine
-              </div>
+            <div className="text-[11px] text-zinc-500 font-mono">
+              Root-Cause Decision Engine
             </div>
           </div>
         </div>
@@ -152,7 +138,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                     <div className={cn('text-xs font-bold leading-tight truncate', isActive ? 'text-white' : 'text-zinc-900')}>
                       {item.label}
                     </div>
-                    <div className={cn('text-[10px] truncate leading-tight', isActive ? 'text-zinc-300' : 'text-zinc-500')}>
+                    <div className={cn('text-[10px] truncate leading-tight', isActive ? 'text-zinc-300' : 'text-zinc-500 font-mono')}>
                       {item.description}
                     </div>
                   </div>
@@ -160,8 +146,10 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
                 <span
                   className={cn(
-                    'text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded shrink-0 ml-1',
-                    isActive ? 'bg-zinc-800 text-white border border-zinc-700' : item.badgeColor
+                    'text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded shrink-0 ml-1 border',
+                    isActive
+                      ? 'bg-zinc-800 text-white border-zinc-700'
+                      : 'bg-zinc-100 text-zinc-700 border-zinc-200'
                   )}
                 >
                   {item.badge}
@@ -186,24 +174,22 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         </div>
 
         {/* Action Buttons in Sidebar */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 font-mono">
           <button
             type="button"
             onClick={onInitiateAttack}
-            className="py-1.5 px-2 bg-black hover:bg-zinc-800 text-white rounded text-[11px] font-bold flex items-center justify-center space-x-1 transition cursor-pointer shadow-xs"
+            className="py-1.5 px-2 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center justify-center transition cursor-pointer shadow-xs"
             title="Inject real-time SQL injection burst"
           >
-            <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
-            <span>Attack</span>
+            Attack
           </button>
           <button
             type="button"
             onClick={onReset}
-            className="py-1.5 px-2 bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-300 rounded text-[11px] font-bold flex items-center justify-center space-x-1 transition cursor-pointer"
+            className="py-1.5 px-2 bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-300 rounded text-xs font-bold flex items-center justify-center transition cursor-pointer"
             title="Reset environment"
           >
-            <RotateCcw className="w-3 h-3 text-zinc-600" />
-            <span>Reset</span>
+            Reset
           </button>
         </div>
       </div>

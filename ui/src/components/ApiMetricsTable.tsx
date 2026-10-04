@@ -292,19 +292,16 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                     {/* Status Badge */}
                     <td className="py-2 px-2">
                       {row.status === 'failing' ? (
-                        <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-black text-white">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-400 mr-1 animate-pulse" />
-                          <span>FAILING</span>
+                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-black text-white">
+                          FAILING
                         </span>
                       ) : row.status === 'degraded' ? (
-                        <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-zinc-200 text-zinc-900">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 animate-pulse" />
-                          <span>DEGRADED</span>
+                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-zinc-200 text-zinc-900 border border-zinc-300">
+                          DEGRADED
                         </span>
                       ) : (
-                        <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded text-[9px] font-medium bg-zinc-50 text-zinc-700 border border-zinc-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1" />
-                          <span>OK</span>
+                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-medium bg-zinc-50 text-zinc-700 border border-zinc-200">
+                          OK
                         </span>
                       )}
                     </td>
