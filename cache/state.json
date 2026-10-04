@@ -1,0 +1,249 @@
+{
+  "mode": "REPLAY",
+  "status": "ok",
+  "active_scenario": "none",
+  "lkg": "1.4.0",
+  "findings_count": 20,
+  "gateway_metrics": {
+    "/api/products|1.5.0": {
+      "route": "/api/products",
+      "version": "1.5.0",
+      "count": 66,
+      "errors": 5,
+      "err_rate": 0.0758,
+      "p50_ms": 2.85,
+      "p95_ms": 19.0,
+      "rps": 1.1
+    },
+    "all|1.5.0": {
+      "route": "all",
+      "version": "1.5.0",
+      "count": 163,
+      "errors": 16,
+      "err_rate": 0.0982,
+      "p50_ms": 3.46,
+      "p95_ms": 34.64,
+      "rps": 2.72
+    },
+    "/api/products|all": {
+      "route": "/api/products",
+      "version": "all",
+      "count": 132,
+      "errors": 6,
+      "err_rate": 0.0455,
+      "p50_ms": 2.75,
+      "p95_ms": 10.79,
+      "rps": 2.2
+    },
+    "all|all": {
+      "route": "all",
+      "version": "all",
+      "count": 303,
+      "errors": 17,
+      "err_rate": 0.0561,
+      "p50_ms": 3.2,
+      "p95_ms": 140.86,
+      "rps": 5.05
+    },
+    "/api/orders|1.5.0": {
+      "route": "/api/orders",
+      "version": "1.5.0",
+      "count": 66,
+      "errors": 7,
+      "err_rate": 0.1061,
+      "p50_ms": 5.27,
+      "p95_ms": 8062.5,
+      "rps": 1.1
+    },
+    "/api/orders|all": {
+      "route": "/api/orders",
+      "version": "all",
+      "count": 115,
+      "errors": 7,
+      "err_rate": 0.0609,
+      "p50_ms": 5.1,
+      "p95_ms": 8037.13,
+      "rps": 1.92
+    },
+    "/api/products|1.4.0": {
+      "route": "/api/products",
+      "version": "1.4.0",
+      "count": 66,
+      "errors": 1,
+      "err_rate": 0.0152,
+      "p50_ms": 2.72,
+      "p95_ms": 4.1,
+      "rps": 1.1
+    },
+    "all|1.4.0": {
+      "route": "all",
+      "version": "1.4.0",
+      "count": 140,
+      "errors": 1,
+      "err_rate": 0.0071,
+      "p50_ms": 2.94,
+      "p95_ms": 8008.41,
+      "rps": 2.33
+    },
+    "/api/orders|1.4.0": {
+      "route": "/api/orders",
+      "version": "1.4.0",
+      "count": 49,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 4.96,
+      "p95_ms": 8036.17,
+      "rps": 0.82
+    },
+    "/api/payments/3|1.5.0": {
+      "route": "/api/payments/3",
+      "version": "1.5.0",
+      "count": 7,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 2.81,
+      "p95_ms": 7.31,
+      "rps": 0.12
+    },
+    "/api/payments/3|all": {
+      "route": "/api/payments/3",
+      "version": "all",
+      "count": 11,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 2.72,
+      "p95_ms": 7.31,
+      "rps": 0.18
+    },
+    "/api/payments/5|1.4.0": {
+      "route": "/api/payments/5",
+      "version": "1.4.0",
+      "count": 5,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 2.61,
+      "p95_ms": 2.94,
+      "rps": 0.08
+    },
+    "/api/payments/5|all": {
+      "route": "/api/payments/5",
+      "version": "all",
+      "count": 9,
+      "errors": 1,
+      "err_rate": 0.1111,
+      "p50_ms": 2.67,
+      "p95_ms": 2.94,
+      "rps": 0.15
+    },
+    "/api/payments/1|1.5.0": {
+      "route": "/api/payments/1",
+      "version": "1.5.0",
+      "count": 7,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 2.73,
+      "p95_ms": 5.45,
+      "rps": 0.12
+    },
+    "/api/payments/1|all": {
+      "route": "/api/payments/1",
+      "version": "all",
+      "count": 13,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 2.7,
+      "p95_ms": 5.45,
+      "rps": 0.22
+    },
+    "/api/payments/4|1.5.0": {
+      "route": "/api/payments/4",
+      "version": "1.5.0",
+      "count": 8,
+      "errors": 2,
+      "err_rate": 0.25,
+      "p50_ms": 3.03,
+      "p95_ms": 3.28,
+      "rps": 0.13
+    },
+    "/api/payments/4|all": {
+      "route": "/api/payments/4",
+      "version": "all",
+      "count": 12,
+      "errors": 2,
+      "err_rate": 0.1667,
+      "p50_ms": 3.03,
+      "p95_ms": 10.67,
+      "rps": 0.2
+    },
+    "/api/payments/3|1.4.0": {
+      "route": "/api/payments/3",
+      "version": "1.4.0",
+      "count": 4,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 2.46,
+      "p95_ms": 2.8,
+      "rps": 0.07
+    },
+    "/api/payments/1|1.4.0": {
+      "route": "/api/payments/1",
+      "version": "1.4.0",
+      "count": 6,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 2.7,
+      "p95_ms": 4.07,
+      "rps": 0.1
+    },
+    "/api/payments/2|1.5.0": {
+      "route": "/api/payments/2",
+      "version": "1.5.0",
+      "count": 5,
+      "errors": 1,
+      "err_rate": 0.2,
+      "p50_ms": 2.67,
+      "p95_ms": 3.57,
+      "rps": 0.08
+    },
+    "/api/payments/2|all": {
+      "route": "/api/payments/2",
+      "version": "all",
+      "count": 11,
+      "errors": 1,
+      "err_rate": 0.0909,
+      "p50_ms": 2.67,
+      "p95_ms": 4.12,
+      "rps": 0.18
+    },
+    "/api/payments/2|1.4.0": {
+      "route": "/api/payments/2",
+      "version": "1.4.0",
+      "count": 6,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 2.73,
+      "p95_ms": 4.12,
+      "rps": 0.1
+    },
+    "/api/payments/4|1.4.0": {
+      "route": "/api/payments/4",
+      "version": "1.4.0",
+      "count": 4,
+      "errors": 0,
+      "err_rate": 0.0,
+      "p50_ms": 3.96,
+      "p95_ms": 10.67,
+      "rps": 0.07
+    },
+    "/api/payments/5|1.5.0": {
+      "route": "/api/payments/5",
+      "version": "1.5.0",
+      "count": 4,
+      "errors": 1,
+      "err_rate": 0.25,
+      "p50_ms": 2.7,
+      "p95_ms": 2.8,
+      "rps": 0.07
+    }
+  }
+}

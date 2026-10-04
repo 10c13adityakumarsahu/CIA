@@ -6,8 +6,6 @@ __pycache__/
 node_modules/
 dist/
 .vite/
-findings/*.json
-cache/*.json
 scenarios/*/truth.json
 logs/
 

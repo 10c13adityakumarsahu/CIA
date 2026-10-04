@@ -26,6 +26,10 @@ graph:
 	@echo "==> Ingesting code graph and findings into Neo4j..."
 	@python graph/ingest.py
 
+record:
+	@echo "==> Recording full scenario runs to cache/..."
+	@python culprit/record.py
+
 # ── Stage acceptance checks ─────────────────────────────────────────────────
 
 # S0: Infrastructure services are all healthy.
@@ -122,12 +126,10 @@ check-s5:
 	@echo "--- check-s5: culprit tools, verifier, preconditions & executor ---"
 	@python -m pytest tests/test_stage5.py -v && echo OK
 
-# S6: scenario a_exploit produces verdict=exploit.
+# S6: scenario a_exploit & b_regression verdicts, verification, replay mode.
 check-s6:
-	@echo "--- check-s6: scenario a_exploit verdict ---"
-	@curl -sf http://localhost:9000/api/scenario/a_exploit/start -X POST && \
-	  echo "Scenario started – check /api/investigate stream for verdict" || \
-	  (echo FAIL && exit 1)
+	@echo "--- check-s6: agent, report verification & replay ---"
+	@python -m pytest tests/test_stage6.py -v && echo OK
 
 # S7: scenario b_regression produces verdict=regression.
 check-s7:

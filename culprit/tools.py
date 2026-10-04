@@ -40,11 +40,11 @@ def search_logs(
     route: Optional[str] = None,
     limit: int = 50,
 ) -> List[Dict[str, Any]]:
-    """Search gateway JSONL logs with optional query text, HTTP status, or route filter."""
+    """Search gateway JSONL logs with optional query text, HTTP status, or route filter (most recent first)."""
     if not LOG_FILE_PATH.exists():
         return []
 
-    results = []
+    entries = []
     with open(LOG_FILE_PATH, "r", encoding="utf-8") as f:
         for line_num, line in enumerate(f, start=1):
             line_str = line.strip()
@@ -52,7 +52,6 @@ def search_logs(
                 continue
             try:
                 entry = json.loads(line_str)
-                # Ensure entry has standard log ID if missing
                 if "id" not in entry:
                     entry["id"] = f"LOG-{line_num:04d}"
 
@@ -66,13 +65,12 @@ def search_logs(
                     if q not in haystack:
                         continue
 
-                results.append(entry)
-                if len(results) >= limit:
-                    break
+                entries.append(entry)
             except Exception:
                 continue
 
-    return results
+    # Return most recent matching entries first
+    return list(reversed(entries))[:limit]
 
 
 def log_stats(route: Optional[str] = None) -> Dict[str, Any]:

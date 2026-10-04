@@ -1,0 +1,169 @@
+{
+  "version": "1.179.0",
+  "results": [
+    {
+      "check_id": "scanners.rules.weak-hash",
+      "path": "C:\\Users\\Adity\\Desktop\\cia\\target_app\\v1.3.0\\legacy_helper.py",
+      "start": {
+        "line": 11,
+        "col": 12,
+        "offset": 294
+      },
+      "end": {
+        "line": 11,
+        "col": 38,
+        "offset": 320
+      },
+      "extra": {
+        "message": "Use of weak cryptographic hash algorithm (MD5 or SHA1)",
+        "metadata": {
+          "cwe": [
+            "CWE-328"
+          ],
+          "owasp": "A02:2021-Cryptographic Failures"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "scanners.rules.subprocess-shell-true",
+      "path": "C:\\Users\\Adity\\Desktop\\cia\\target_app\\v1.3.0\\legacy_helper.py",
+      "start": {
+        "line": 16,
+        "col": 14,
+        "offset": 461
+      },
+      "end": {
+        "line": 16,
+        "col": 77,
+        "offset": 524
+      },
+      "extra": {
+        "message": "Subprocess executed with shell=True",
+        "metadata": {
+          "cwe": [
+            "CWE-78"
+          ],
+          "owasp": "A03:2021-Injection"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "scanners.rules.sql-fstring-exec",
+      "path": "C:\\Users\\Adity\\Desktop\\cia\\target_app\\v1.3.0\\main.py",
+      "start": {
+        "line": 74,
+        "col": 13,
+        "offset": 1726
+      },
+      "end": {
+        "line": 75,
+        "col": 31,
+        "offset": 1838
+      },
+      "extra": {
+        "message": "SQL query constructed with f-string interpolation passed to cursor.execute()",
+        "metadata": {
+          "cwe": [
+            "CWE-89"
+          ],
+          "owasp": "A03:2021-Injection"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    }
+  ],
+  "errors": [],
+  "paths": {
+    "scanned": [
+      "C:\\Users\\Adity\\Desktop\\cia\\target_app\\v1.3.0\\legacy_helper.py",
+      "C:\\Users\\Adity\\Desktop\\cia\\target_app\\v1.3.0\\main.py"
+    ]
+  },
+  "time": {
+    "rules": [],
+    "rules_parse_time": 0.0010340213775634766,
+    "profiling_times": {
+      "config_time": 10.812906265258789,
+      "core_time": 3.025024890899658,
+      "ignores_time": 0.0009987354278564453,
+      "total_time": 13.855100393295288
+    },
+    "parsing_time": {
+      "total_time": 0.0,
+      "per_file_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_files": []
+    },
+    "scanning_time": {
+      "total_time": 0.024651765823364258,
+      "per_file_time": {
+        "mean": 0.012325882911682129,
+        "std_dev": 6.766584320416769e-06
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_files": []
+    },
+    "matching_time": {
+      "total_time": 0.0,
+      "per_file_and_rule_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_rules_on_files": []
+    },
+    "tainting_time": {
+      "total_time": 0.0,
+      "per_def_and_rule_time": {
+        "mean": 0.0,
+        "std_dev": 0.0
+      },
+      "very_slow_stats": {
+        "time_ratio": 0.0,
+        "count_ratio": 0.0
+      },
+      "very_slow_rules_on_defs": []
+    },
+    "fixpoint_timeouts": [],
+    "prefiltering": {
+      "project_level_time": 0.0,
+      "file_level_time": 0.0,
+      "rules_with_project_prefilters_ratio": 0.0,
+      "rules_with_file_prefilters_ratio": 1.0,
+      "rules_selected_ratio": 0.5,
+      "rules_matched_ratio": 0.5
+    },
+    "targets": [],
+    "total_bytes": 0,
+    "max_memory_bytes": 97705088
+  },
+  "engine_requested": "OSS",
+  "skipped_rules": [],
+  "profiling_results": []
+}
