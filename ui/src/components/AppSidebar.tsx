@@ -93,15 +93,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       {/* Brand Header */}
       <div>
         <div className="p-4 border-b border-zinc-200 flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-black font-mono text-sm">
-            C
-          </div>
           <div>
             <div className="flex items-center space-x-1.5">
               <span className="font-bold text-zinc-900 text-sm tracking-tight">CULPRIT</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-700 border border-zinc-200 font-bold">
-                v1.5
-              </span>
             </div>
             <div className="text-[11px] text-zinc-500 font-mono">
               Root-Cause Decision Engine
@@ -127,7 +121,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 className={cn(
                   'w-full text-left px-3 py-2.5 rounded-lg transition flex items-center justify-between group cursor-pointer border',
                   isActive
-                    ? 'bg-black text-white border-black shadow-xs'
+                    ? 'bg-[#0176D3] text-white border-[#0176D3] shadow-xs'
                     : 'bg-transparent border-transparent hover:bg-zinc-100 text-zinc-700'
                 )}
               >
@@ -136,7 +130,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                     className={cn(
                       'w-5 h-5 rounded text-[10px] font-mono font-bold flex items-center justify-center shrink-0 border',
                       isActive
-                        ? 'bg-zinc-800 text-white border-zinc-700'
+                        ? 'bg-white text-[#0176D3] border-white'
                         : 'bg-zinc-100 text-zinc-600 border-zinc-200 group-hover:border-zinc-300'
                     )}
                   >
@@ -146,7 +140,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                     <div className={cn('text-xs font-bold leading-tight truncate', isActive ? 'text-white' : 'text-zinc-900')}>
                       {item.label}
                     </div>
-                    <div className={cn('text-[10px] truncate leading-tight', isActive ? 'text-zinc-300' : 'text-zinc-500 font-mono')}>
+                    <div className={cn('text-[10px] truncate leading-tight', isActive ? 'text-blue-100' : 'text-zinc-500 font-mono')}>
                       {item.description}
                     </div>
                   </div>
@@ -156,7 +150,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   className={cn(
                     'text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded shrink-0 ml-1 border',
                     isActive
-                      ? 'bg-zinc-800 text-white border-zinc-700'
+                      ? 'bg-[#014486] text-white border-transparent'
                       : 'bg-zinc-100 text-zinc-700 border-zinc-200'
                   )}
                 >
@@ -186,7 +180,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           <button
             type="button"
             onClick={onInitiateAttack}
-            className="py-1.5 px-2 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center justify-center transition cursor-pointer shadow-xs"
+            className="py-1.5 px-2 bg-[#0176D3] hover:bg-[#014486] text-white rounded text-xs font-bold flex items-center justify-center transition cursor-pointer shadow-xs active:scale-98"
             title="Inject real-time SQL injection burst"
           >
             Attack
@@ -194,7 +188,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           <button
             type="button"
             onClick={onReset}
-            className="py-1.5 px-2 bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-300 rounded text-xs font-bold flex items-center justify-center transition cursor-pointer"
+            className="py-1.5 px-2 bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-300 rounded text-xs font-bold flex items-center justify-center transition cursor-pointer active:scale-98"
             title="Reset environment"
           >
             Reset

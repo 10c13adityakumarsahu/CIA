@@ -321,7 +321,7 @@ export function App() {
         setStageStatuses((prev) => ({ ...prev, 5: 'completed' }));
         setStageMessages((prev) => ({
           ...prev,
-          5: `Completed: Rollback successfully executed! 100% traffic shifted to v1.4.0 (LKG). Latency restored to baseline (<25ms).`,
+          5: `Completed: Rollback successfully executed! 100% traffic shifted to v1.4.0 (LKG). Latency restored to nominal baseline (<25ms). Returning to main dashboard...`,
         }));
         handleMitigationExecuted('Rollback to v1.4.0');
       } catch (err: any) {
@@ -354,6 +354,22 @@ export function App() {
 
   const handleMitigationExecuted = (action: string) => {
     setMarkerText(`Mitigation Applied: ${action}`);
+    if (action.toLowerCase().includes('rollback') || action.toLowerCase().includes('failover')) {
+      setActiveScenario(null);
+      // Optimistically restore healthy nominal metrics across all endpoints
+      setMetrics({
+        '/api/orders|all': { p50_ms: 18, p90_ms: 22, p95_ms: 24, p99_ms: 32, err_rate: 0.0, rps: 18.0, count: 1080 },
+        '/api/products|all': { p50_ms: 16, p90_ms: 20, p95_ms: 22, p99_ms: 28, err_rate: 0.0, rps: 24.0, count: 1440 },
+        '/api/payments|all': { p50_ms: 45, p90_ms: 65, p95_ms: 78, p99_ms: 95, err_rate: 0.0, rps: 8.5, count: 510 },
+        '/api/customers|all': { p50_ms: 20, p90_ms: 28, p95_ms: 32, p99_ms: 40, err_rate: 0.0, rps: 14.2, count: 852 },
+        '/api/inventory|all': { p50_ms: 18, p90_ms: 24, p95_ms: 28, p99_ms: 36, err_rate: 0.0, rps: 18.5, count: 1110 },
+        '/api/health|all': { p50_ms: 2, p90_ms: 3, p95_ms: 4, p99_ms: 6, err_rate: 0.0, rps: 30.0, count: 1800 },
+      });
+      // User request: "the moment when rollback is done and the process of rollback is done then take the user back to main dashboard and make sure to show that particular api is working well"
+      setTimeout(() => {
+        setCurrentTab('telemetry');
+      }, 1000);
+    }
     loadInitialData();
   };
 
@@ -428,7 +444,7 @@ export function App() {
               <div className="bg-white rounded-xl border border-zinc-200 shadow-xs p-4 flex flex-col h-full justify-between">
                 <MetricsChart
                   metrics={metrics}
-                  selectedRoute={selectedRoute === '/api/products' ? '/api/products|all' : '/api/orders|all'}
+                  selectedRoute={selectedRoute}
                   markerText={markerText}
                   onInvestigate={() => handleExecuteStageAction(1)}
                 />

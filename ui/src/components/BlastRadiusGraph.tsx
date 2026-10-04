@@ -29,13 +29,13 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
       { id: 'db_orders', label: 'Table: orders', type: 'table', impact: 'confirmed', pos: [960, 460] },
     ];
 
-    // Helper for impact styling (clean monochrome)
+    // Helper for impact styling (Salesforce Blue for critical/confirmed)
     const getImpactStyle = (impact: NodeImpact) => {
       switch (impact) {
         case 'confirmed':
-          return { border: 'border-black bg-white shadow-xs', badge: 'bg-black text-white font-bold', tag: 'CRITICAL' };
+          return { border: 'border-[#0176D3] bg-white shadow-sm ring-1 ring-[#0176D3]/20', badge: 'bg-[#0176D3] text-white font-bold', tag: 'CRITICAL' };
         case 'likely':
-          return { border: 'border-zinc-500 bg-white shadow-xs', badge: 'bg-zinc-800 text-white font-semibold', tag: 'STARVED' };
+          return { border: 'border-amber-500 bg-white shadow-xs', badge: 'bg-amber-600 text-white font-semibold', tag: 'STARVED' };
         case 'possible':
           return { border: 'border-zinc-300 bg-white shadow-xs', badge: 'bg-zinc-100 text-zinc-800 border border-zinc-200', tag: 'REACHABLE' };
         default:
@@ -62,19 +62,21 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
         position: { x: n.pos[0], y: n.pos[1] },
         data: {
           label: (
-            <div className={`p-3 rounded-lg border-2 ${style.border} text-xs font-mono w-56 text-left`}>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-zinc-900 font-bold truncate text-[11px]">{n.label}</span>
-                <span className="text-[9px] font-mono text-zinc-400 uppercase font-semibold">
+            <div className={`p-3 rounded-lg border-2 ${style.border} text-xs font-mono w-64 min-w-[256px] text-left overflow-hidden bg-white`}>
+              <div className="flex items-center justify-between mb-1.5 gap-1">
+                <span className="text-zinc-900 font-bold truncate text-[11px] flex-1">{n.label}</span>
+                <span className="text-[9px] font-mono text-zinc-500 uppercase font-semibold shrink-0">
                   {style.tag}
                 </span>
               </div>
-              <div className="flex items-center justify-between mt-2 pt-1 border-t border-zinc-100">
-                <span className={`text-[10px] uppercase font-mono px-1.5 py-0.2 rounded ${style.badge}`}>
+              <div className="flex items-center justify-between mt-2 pt-1 border-t border-zinc-100 gap-1.5 overflow-hidden">
+                <span className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded shrink-0 ${style.badge}`}>
                   {impact}
                 </span>
                 {cite && (
-                  <CitationChip citation={cite} onClick={onSelectCitation} className="text-[10px]" />
+                  <div className="overflow-hidden shrink min-w-0">
+                    <CitationChip citation={cite} onClick={onSelectCitation} className="text-[10px]" />
+                  </div>
                 )}
               </div>
             </div>
@@ -84,14 +86,14 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
     });
 
     const flowEdges: Edge[] = [
-      { id: 'e-gw-orders', source: 'gw', target: 'r_orders', animated: true, style: { stroke: '#18181b', strokeWidth: 2 } },
+      { id: 'e-gw-orders', source: 'gw', target: 'r_orders', animated: true, style: { stroke: '#0176D3', strokeWidth: 2.2 } },
       { id: 'e-gw-prod', source: 'gw', target: 'r_products', animated: true, style: { stroke: '#71717a', strokeWidth: 1.5 } },
-      { id: 'e-orders-fn', source: 'r_orders', target: 'fn_orders', animated: true, style: { stroke: '#18181b', strokeWidth: 2 } },
-      { id: 'e-orders-pool', source: 'r_orders', target: 'pool', animated: true, style: { stroke: '#18181b', strokeWidth: 2 } },
+      { id: 'e-orders-fn', source: 'r_orders', target: 'fn_orders', animated: true, style: { stroke: '#0176D3', strokeWidth: 2.2 } },
+      { id: 'e-orders-pool', source: 'r_orders', target: 'pool', animated: true, style: { stroke: '#0176D3', strokeWidth: 2.2 } },
       { id: 'e-prod-pool', source: 'r_products', target: 'pool', animated: true, style: { stroke: '#71717a', strokeWidth: 1.5 } },
       { id: 'e-fn-cust', source: 'fn_orders', target: 'db_customers', animated: false, style: { stroke: '#a1a1aa', strokeDasharray: '4 4' } },
       { id: 'e-fn-pay', source: 'fn_orders', target: 'db_payments', animated: false, style: { stroke: '#a1a1aa', strokeDasharray: '4 4' } },
-      { id: 'e-fn-ord', source: 'fn_orders', target: 'db_orders', animated: true, style: { stroke: '#18181b', strokeWidth: 2 } },
+      { id: 'e-fn-ord', source: 'fn_orders', target: 'db_orders', animated: true, style: { stroke: '#0176D3', strokeWidth: 2.2 } },
       { id: 'e-pool-inv', source: 'pool', target: 'db_inventory', animated: true, style: { stroke: '#71717a', strokeWidth: 1.5 } },
     ];
 
@@ -103,9 +105,9 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
       <div className="absolute top-4 left-4 z-10 bg-white border border-zinc-200 px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium text-zinc-800 shadow-xs flex items-center space-x-3">
         <span className="font-bold text-zinc-900 uppercase tracking-wider text-[11px]">Blast Radius Graph</span>
         <div className="flex items-center space-x-2 text-[10px]">
-          <span className="px-1.5 py-0.2 bg-black text-white rounded font-bold">CONFIRMED</span>
-          <span className="px-1.5 py-0.2 bg-zinc-800 text-white rounded font-semibold">LIKELY</span>
-          <span className="px-1.5 py-0.2 bg-zinc-100 text-zinc-700 border border-zinc-200 rounded">POSSIBLE</span>
+          <span className="px-1.5 py-0.5 bg-[#0176D3] text-white rounded font-bold">CONFIRMED</span>
+          <span className="px-1.5 py-0.5 bg-amber-600 text-white rounded font-semibold">STARVED</span>
+          <span className="px-1.5 py-0.5 bg-zinc-100 text-zinc-700 border border-zinc-200 rounded">REACHABLE</span>
         </div>
       </div>
       <ReactFlow

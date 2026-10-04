@@ -86,7 +86,7 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
       {/* Header */}
       <div className="p-4 border-b border-zinc-100 flex items-center justify-between bg-white">
         <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-bold text-xs">
+          <div className="w-8 h-8 rounded-lg bg-[#0176D3] text-white flex items-center justify-center font-bold text-xs shadow-2xs">
             <History className="w-4 h-4" />
           </div>
           <div>
@@ -103,7 +103,7 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
           className={cn(
             'px-2 py-0.5 rounded text-[11px] font-mono font-bold border flex items-center space-x-1',
             isRolledBack
-              ? 'bg-black text-white border-black'
+              ? 'bg-[#0176D3] text-white border-[#0176D3]'
               : 'bg-zinc-100 text-zinc-800 border-zinc-200'
           )}
         >
@@ -114,26 +114,26 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
       <div className="p-4 space-y-4">
         {/* Version Transition Matrix */}
         <div className="grid grid-cols-2 gap-3 font-mono">
-          <div className={cn('p-3 rounded border', isRolledBack ? 'bg-zinc-50 border-zinc-200 opacity-60' : 'bg-zinc-50 border-zinc-300')}>
+          <div className={cn('p-3 rounded-lg border', isRolledBack ? 'bg-zinc-50 border-zinc-200 opacity-60' : 'bg-zinc-50 border-zinc-300')}>
             <div className="text-[10px] text-zinc-500 uppercase">Current (Culprit)</div>
             <div className="text-sm font-bold text-zinc-900 mt-1">v1.5.0 (Blue)</div>
             <div className="text-[11px] text-zinc-600 mt-0.5">Weight: {blueWeight}%</div>
           </div>
 
-          <div className={cn('p-3 rounded border', isRolledBack ? 'bg-black text-white border-black shadow-xs' : 'bg-zinc-50 border-zinc-300')}>
-            <div className={cn('text-[10px] uppercase', isRolledBack ? 'text-zinc-300' : 'text-zinc-500')}>Target (LKG Stable)</div>
+          <div className={cn('p-3 rounded-lg border', isRolledBack ? 'bg-[#0176D3] text-white border-[#0176D3] shadow-xs' : 'bg-zinc-50 border-zinc-300')}>
+            <div className={cn('text-[10px] uppercase', isRolledBack ? 'text-blue-100' : 'text-zinc-500')}>Target (LKG Stable)</div>
             <div className={cn('text-sm font-bold mt-1', isRolledBack ? 'text-white' : 'text-zinc-900')}>v1.4.0 (Green)</div>
-            <div className={cn('text-[11px] mt-0.5', isRolledBack ? 'text-zinc-300' : 'text-zinc-600')}>Weight: {greenWeight}%</div>
+            <div className={cn('text-[11px] mt-0.5', isRolledBack ? 'text-blue-100' : 'text-zinc-600')}>Weight: {greenWeight}%</div>
           </div>
         </div>
 
         {/* Contextual Endpoint Remediation Scope */}
-        <div className="p-2.5 rounded bg-zinc-50 border border-zinc-200 font-mono text-xs">
-          <div className="text-[10px] text-zinc-500 uppercase font-bold flex items-center justify-between">
+        <div className="p-2.5 rounded-lg bg-blue-50/50 border border-blue-200 font-mono text-xs">
+          <div className="text-[10px] text-[#0176D3] uppercase font-bold flex items-center justify-between">
             <span>Target Remediation Scope:</span>
-            <span className="text-zinc-900 bg-zinc-200 px-1 rounded">{selectedRoute}</span>
+            <span className="text-[#0176D3] bg-blue-100 px-1.5 py-0.5 rounded font-bold">{selectedRoute}</span>
           </div>
-          <div className="text-[11px] text-zinc-700 mt-1">
+          <div className="text-[11px] text-zinc-700 mt-1.5 leading-relaxed">
             {selectedRoute === '/api/orders'
               ? 'Failover to v1.4.0 strips the tainted raw SQL string interpolation in orders(), eliminating thread blocks.'
               : selectedRoute === '/api/products'
@@ -143,13 +143,13 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
         </div>
 
         {/* Deterministic Preconditions Checklist */}
-        <div className="space-y-1.5 bg-zinc-50 p-3 rounded border border-zinc-200 text-xs font-mono">
+        <div className="space-y-1.5 bg-zinc-50 p-3 rounded-lg border border-zinc-200 text-xs font-mono">
           <div className="font-bold text-zinc-900 text-[11px] uppercase tracking-wider mb-2">
             Safety Preconditions (Deterministic Check)
           </div>
           {preconditions.map((p, i) => (
             <div key={i} className="flex items-center space-x-2 text-zinc-700">
-              <Check className="w-3.5 h-3.5 text-black shrink-0" />
+              <Check className="w-3.5 h-3.5 text-[#0176D3] shrink-0" />
               <span>{p.name}</span>
             </div>
           ))}
@@ -157,7 +157,7 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
 
         {/* Status Message if any */}
         {statusMessage && (
-          <div className="p-2.5 rounded bg-zinc-100 border border-zinc-300 text-xs font-mono text-zinc-900">
+          <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-xs font-mono text-[#0176D3] font-semibold">
             {statusMessage}
           </div>
         )}
@@ -169,7 +169,7 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
               type="button"
               onClick={handleRollback}
               disabled={isExecuting}
-              className="flex-1 py-2 rounded bg-black hover:bg-zinc-800 text-white font-bold text-xs flex items-center justify-center space-x-2 transition shadow-sm cursor-pointer"
+              className="flex-1 py-2 rounded-lg bg-[#0176D3] hover:bg-[#014486] text-white font-bold text-xs flex items-center justify-center space-x-2 transition shadow-xs cursor-pointer active:scale-98"
             >
               <RotateCcw className={cn('w-3.5 h-3.5', isExecuting && 'animate-spin')} />
               <span>{isExecuting ? 'Executing Verified Rollback...' : 'Execute Safe Rollback to v1.4.0'}</span>
@@ -179,7 +179,7 @@ export const RollbackControlCard: React.FC<RollbackControlCardProps> = ({
               type="button"
               onClick={handleUndo}
               disabled={isExecuting}
-              className="flex-1 py-2 rounded bg-white hover:bg-zinc-50 border border-zinc-300 text-zinc-800 font-bold text-xs flex items-center justify-center space-x-2 transition cursor-pointer"
+              className="flex-1 py-2 rounded-lg bg-white hover:bg-zinc-50 border border-zinc-300 text-zinc-800 font-bold text-xs flex items-center justify-center space-x-2 transition cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Undo Rollback (Restore 1.5.0)</span>

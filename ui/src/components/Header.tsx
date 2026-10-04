@@ -29,18 +29,18 @@ export const Header: React.FC<HeaderProps> = ({
         </span>
 
         {activeScenario && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-black text-white border border-zinc-900 uppercase tracking-tight">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-[#0176D3] text-white border border-[#0176D3] uppercase tracking-tight shadow-2xs">
             Attack Active: {activeScenario === 'a_exploit' ? 'Whitebox SQLi' : 'N+1 Loop Spike'}
           </span>
         )}
       </div>
 
-      {/* Action Controls - Clean Monochrome, No Emoticons */}
+      {/* Action Controls - Clean Salesforce Blue & Neutrals */}
       <div className="flex items-center space-x-2 font-mono text-xs">
         <button
           type="button"
           onClick={onInitiateAttack}
-          className="px-3.5 py-1.5 rounded font-bold text-xs transition border cursor-pointer bg-black text-white border-black hover:bg-zinc-800 active:scale-98 shadow-xs"
+          className="px-3.5 py-1.5 rounded-lg font-bold text-xs transition border cursor-pointer bg-[#0176D3] text-white border-[#0176D3] hover:bg-[#014486] active:scale-98 shadow-xs"
           title="Inject real-time SQL injection burst directly into Docker target container :8001"
         >
           Initiate Whitebox Attack

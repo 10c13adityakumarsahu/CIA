@@ -72,12 +72,14 @@ export const HumanInTheLoopBar: React.FC<HumanInTheLoopBarProps> = ({
   return (
     <div className="bg-white border-b border-zinc-200 px-6 py-2 shadow-xs shrink-0 select-none">
       {/* Top Row: Stepper and Endpoint Selector */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-        {/* Stepper Pipeline */}
-        <div className="flex items-center space-x-1 overflow-x-auto py-0.5">
-          <span className="text-[10px] uppercase font-mono font-bold text-zinc-500 mr-2 shrink-0">
-            Human-in-Loop Flow:
-          </span>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
+        {/* Visual Guided Stepper Pipeline (Prominent User Flow) */}
+        <div className="flex items-center space-x-1.5 overflow-x-auto py-1">
+          <div className="flex items-center space-x-1 mr-2 shrink-0">
+            <span className="text-[11px] uppercase font-mono font-bold text-zinc-900 tracking-wider">
+              Flow:
+            </span>
+          </div>
 
           {stages.map((st, idx) => {
             const isActive = currentStageNumber === st.num;
@@ -90,25 +92,34 @@ export const HumanInTheLoopBar: React.FC<HumanInTheLoopBarProps> = ({
                   type="button"
                   onClick={() => onSelectTab(st.tab)}
                   className={cn(
-                    'px-2.5 py-1 rounded text-xs font-mono flex items-center space-x-1.5 transition cursor-pointer border shrink-0',
+                    'px-3 py-1.5 rounded-lg text-xs font-mono flex items-center space-x-2 transition cursor-pointer border shrink-0 shadow-2xs',
                     isActive
-                      ? 'bg-black text-white border-black font-bold shadow-xs'
+                      ? 'bg-[#0176D3] text-white border-[#0176D3] font-bold ring-2 ring-[#0176D3]/20 shadow-sm'
                       : status === 'completed'
-                      ? 'bg-zinc-100 text-zinc-900 border-zinc-300 hover:bg-zinc-200'
-                      : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
+                        ? 'bg-blue-50 text-[#0176D3] border-blue-200 hover:bg-blue-100 font-semibold'
+                        : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
                   )}
                 >
-                  {status === 'processing' ? (
-                    <Loader2 className="w-3 h-3 animate-spin text-zinc-400" />
-                  ) : status === 'completed' ? (
-                    <Check className={cn('w-3 h-3', isActive ? 'text-white' : 'text-black')} />
-                  ) : (
-                    <Icon className="w-3 h-3" />
-                  )}
-                  <span>{st.title}</span>
+                  <span
+                    className={cn(
+                      'w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0',
+                      isActive
+                        ? 'bg-white text-[#0176D3]'
+                        : status === 'completed'
+                          ? 'bg-[#0176D3] text-white'
+                          : 'bg-zinc-100 text-zinc-600'
+                    )}
+                  >
+                    {status === 'completed' ? (
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    ) : (
+                      st.num
+                    )}
+                  </span>
+                  <span>{st.title.split('. ')[1]}</span>
                 </button>
                 {idx < stages.length - 1 && (
-                  <span className="text-zinc-300 font-mono text-xs px-0.5 select-none">→</span>
+                  <span className="text-zinc-300 font-mono text-xs px-0.5 select-none font-bold">→</span>
                 )}
               </React.Fragment>
             );
@@ -117,19 +128,19 @@ export const HumanInTheLoopBar: React.FC<HumanInTheLoopBarProps> = ({
 
         {/* Focused Endpoint Selector */}
         <div className="flex items-center space-x-2 shrink-0">
-          <span className="text-[10px] font-mono text-zinc-500 uppercase font-semibold">
+          <span className="text-[11px] font-mono text-zinc-500 uppercase font-semibold">
             Focused API:
           </span>
-          <div className="flex bg-zinc-100 p-0.5 rounded border border-zinc-200 text-xs font-mono">
+          <div className="flex bg-zinc-100 p-0.5 rounded-lg border border-zinc-200 text-xs font-mono">
             {endpoints.map((ep) => (
               <button
                 key={ep}
                 type="button"
                 onClick={() => onSelectRoute(ep)}
                 className={cn(
-                  'px-2 py-0.5 rounded transition text-[11px] cursor-pointer',
+                  'px-2.5 py-0.5 rounded-md transition text-[11px] cursor-pointer font-medium',
                   selectedRoute === ep
-                    ? 'bg-black text-white font-bold shadow-xs'
+                    ? 'bg-[#0176D3] text-white font-bold shadow-2xs'
                     : 'text-zinc-600 hover:text-zinc-900'
                 )}
               >
@@ -142,23 +153,23 @@ export const HumanInTheLoopBar: React.FC<HumanInTheLoopBarProps> = ({
 
       {/* Bottom Row: Stage Action, Processing, and Next Stage Status */}
       <div className="mt-2 pt-2 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs font-mono">
-        <div className="flex items-center space-x-2 min-w-0">
-          <span className="px-1.5 py-0.2 rounded text-[10px] uppercase font-bold bg-zinc-100 text-zinc-800 border border-zinc-200 shrink-0">
-            Stage {currentStageNumber}
+        <div className="flex items-center space-x-2.5 min-w-0">
+          <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-blue-50 text-[#0176D3] border border-blue-200 shrink-0">
+            Step {currentStageNumber} of 5
           </span>
 
           {currentStatus === 'processing' ? (
             <div className="flex items-center space-x-2 text-zinc-900 font-semibold truncate animate-pulse">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-black shrink-0" />
-              <span className="truncate">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0176D3] shrink-0" />
+              <span className="truncate text-[#0176D3] font-bold">
                 [PROCESSING]: {currentMessage || 'Executing verification step...'}
               </span>
             </div>
           ) : currentStatus === 'completed' ? (
             <div className="flex items-center space-x-2 text-zinc-900 truncate">
-              <span className="w-2 h-2 rounded bg-black shrink-0" />
-              <span className="font-bold text-black shrink-0">[COMPLETED]:</span>
-              <span className="text-zinc-700 truncate">{currentMessage}</span>
+              <span className="w-2 h-2 rounded-full bg-[#0176D3] shrink-0" />
+              <span className="font-bold text-[#0176D3] shrink-0">[COMPLETED]:</span>
+              <span className="text-zinc-800 font-medium truncate">{currentMessage}</span>
             </div>
           ) : (
             <div className="flex items-center space-x-2 text-zinc-600 truncate">
@@ -173,8 +184,8 @@ export const HumanInTheLoopBar: React.FC<HumanInTheLoopBarProps> = ({
         {/* Stage Interactive Action Buttons */}
         <div className="flex items-center space-x-2 shrink-0">
           {currentStatus === 'processing' ? (
-            <span className="px-3 py-1 rounded bg-zinc-100 text-zinc-500 border border-zinc-200 font-bold text-xs flex items-center space-x-1.5">
-              <Loader2 className="w-3 h-3 animate-spin" />
+            <span className="px-3.5 py-1 rounded-lg bg-blue-50 text-[#0176D3] border border-blue-200 font-bold text-xs flex items-center space-x-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>In Progress...</span>
             </span>
           ) : currentStatus === 'completed' ? (
@@ -182,17 +193,18 @@ export const HumanInTheLoopBar: React.FC<HumanInTheLoopBarProps> = ({
               <button
                 type="button"
                 onClick={onAdvanceToNextStage}
-                className="px-3.5 py-1 rounded bg-black hover:bg-zinc-800 text-white font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 rounded-lg bg-[#0176D3] hover:bg-[#014486] text-white font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-xs active:scale-98"
               >
-                <span>Advance to Stage {currentStageNumber + 1}: {stages[currentStageNumber].title.split('.')[1]}</span>
+                <span>Advance to Step {currentStageNumber + 1}: {stages[currentStageNumber].title.split('. ')[1]}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : isRecovered ? (
-              <span className="px-3 py-1 rounded bg-black text-white font-bold text-xs">
-                System Restored to Health (100% LKG)
+              <span className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center space-x-1.5">
+                <Check className="w-3.5 h-3.5" />
+                <span>System Restored to Health (100% LKG)</span>
               </span>
             ) : (
-              <span className="px-3 py-1 rounded bg-zinc-100 text-zinc-800 border border-zinc-300 font-bold text-xs">
+              <span className="px-3 py-1 rounded-lg bg-blue-50 text-[#0176D3] border border-blue-200 font-bold text-xs">
                 Recovery Verified
               </span>
             )
@@ -200,7 +212,7 @@ export const HumanInTheLoopBar: React.FC<HumanInTheLoopBarProps> = ({
             <button
               type="button"
               onClick={() => onExecuteStageAction(currentStageNumber)}
-              className="px-3.5 py-1 rounded bg-black hover:bg-zinc-800 text-white font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+              className="px-3.5 py-1.5 rounded-lg bg-[#0176D3] hover:bg-[#014486] text-white font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-xs active:scale-98"
             >
               <span>{stages[currentStageNumber - 1].actionLabel}</span>
               <ArrowRight className="w-3.5 h-3.5" />

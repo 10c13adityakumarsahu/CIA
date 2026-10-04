@@ -178,12 +178,12 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
       <div>
         <div className="p-3 border-b border-zinc-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white">
           <div className="flex items-center space-x-2">
-            <Activity className="w-3.5 h-3.5 text-black" />
+            <Activity className="w-3.5 h-3.5 text-[#0176D3]" />
             <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-900 font-mono">
               Endpoint Telemetry
             </h3>
             {degradedCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded bg-black text-white text-[10px] font-mono font-bold">
+              <span className="px-2 py-0.5 rounded bg-[#0176D3] text-white text-[10px] font-mono font-bold shadow-2xs">
                 {degradedCount} Impacted
               </span>
             )}
@@ -198,7 +198,7 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                 placeholder="Filter route..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-7 pr-2 py-0.5 bg-zinc-50 border border-zinc-200 rounded text-[11px] text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-black w-28 font-mono"
+                className="pl-7 pr-2 py-0.5 bg-zinc-50 border border-zinc-200 rounded text-[11px] text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#0176D3] w-28 font-mono"
               />
             </div>
 
@@ -221,7 +221,7 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                 className={cn(
                   'px-2 py-0.2 rounded transition',
                   statusFilter === 'degraded_failing'
-                    ? 'bg-black text-white font-bold shadow-xs'
+                    ? 'bg-[#0176D3] text-white font-bold shadow-xs'
                     : 'text-zinc-600 hover:text-zinc-900'
                 )}
               >
@@ -233,17 +233,17 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
 
         {/* Blast Radius Cascade Alert */}
         {degradedCount > 1 && (
-          <div className="bg-zinc-100 border-b border-zinc-300 px-3 py-1.5 flex items-center justify-between text-xs text-zinc-900 font-mono">
+          <div className="bg-blue-50/60 border-b border-blue-200 px-3 py-1.5 flex items-center justify-between text-xs text-zinc-900 font-mono">
             <div className="flex items-center space-x-1.5 text-[11px] truncate">
-              <Zap className="w-3.5 h-3.5 text-black shrink-0" />
-              <span className="font-bold text-zinc-900">Postgres Pool Contention:</span>
-              <span className="text-zinc-600 truncate">/api/orders lock cascading to products & payments</span>
+              <Zap className="w-3.5 h-3.5 text-[#0176D3] shrink-0" />
+              <span className="font-bold text-[#0176D3]">Postgres Pool Contention:</span>
+              <span className="text-zinc-700 truncate">/api/orders lock cascading to products & payments</span>
             </div>
             {onViewBlastRadius && (
               <button
                 type="button"
                 onClick={() => onViewBlastRadius('/api/orders')}
-                className="px-2 py-0.5 bg-black text-white text-[10px] rounded font-bold hover:bg-zinc-800 transition shrink-0 ml-2"
+                className="px-2.5 py-0.5 bg-[#0176D3] hover:bg-[#014486] text-white text-[10px] rounded font-bold transition shrink-0 ml-2 shadow-2xs"
               >
                 View Map →
               </button>
@@ -277,28 +277,28 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                     className={cn(
                       'transition-colors cursor-pointer',
                       isSelected
-                        ? 'bg-zinc-100 ring-1 ring-zinc-300 font-semibold'
+                        ? 'bg-blue-50/80 ring-2 ring-[#0176D3] font-semibold text-zinc-900 shadow-2xs'
                         : isDegraded
-                        ? 'bg-zinc-50/70 hover:bg-zinc-100/60'
+                        ? 'bg-zinc-50/70 hover:bg-blue-50/40'
                         : 'hover:bg-zinc-50/80'
                     )}
                   >
                     {/* Endpoint Name */}
                     <td className="py-2 px-3">
                       <div className="flex items-center space-x-1.5">
-                        <span className="px-1 py-0.2 rounded text-[9px] font-bold border bg-zinc-100 text-zinc-800 border-zinc-300">
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold border bg-zinc-100 text-zinc-800 border-zinc-300">
                           {row.method}
                         </span>
                         <div>
-                          <div className="font-bold text-zinc-900 text-xs flex items-center space-x-1">
+                          <div className="font-bold text-zinc-900 text-xs flex items-center space-x-1.5">
                             <span>{row.route}</span>
                             {row.route === '/api/orders' && isDegraded && (
-                              <span className="text-[9px] font-sans px-1 py-0.2 rounded bg-black text-white font-bold">
+                              <span className="text-[9px] font-sans px-1.5 py-0.5 rounded bg-[#0176D3] text-white font-bold">
                                 Exploit Point
                               </span>
                             )}
                             {row.route === '/api/products' && isDegraded && (
-                              <span className="text-[9px] font-sans px-1 py-0.2 rounded bg-zinc-800 text-white font-semibold">
+                              <span className="text-[9px] font-sans px-1.5 py-0.5 rounded bg-amber-600 text-white font-semibold">
                                 Pool Starved
                               </span>
                             )}
@@ -310,15 +310,15 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                     {/* Status Badge */}
                     <td className="py-2 px-2">
                       {row.status === 'failing' ? (
-                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-black text-white">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-[#0176D3] text-white shadow-2xs">
                           FAILING
                         </span>
                       ) : row.status === 'degraded' ? (
-                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-zinc-200 text-zinc-900 border border-zinc-300">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
                           DEGRADED
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-medium bg-zinc-50 text-zinc-700 border border-zinc-200">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                           OK
                         </span>
                       )}
@@ -338,11 +338,11 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                     <td className="py-2 px-2 text-right">
                       <span
                         className={cn(
-                          'font-bold px-1 py-0.2 rounded',
+                          'font-bold px-1.5 py-0.5 rounded',
                           row.p95_ms > 2000
-                            ? 'bg-black text-white'
+                            ? 'bg-[#0176D3] text-white'
                             : row.p95_ms > 500
-                            ? 'bg-zinc-200 text-zinc-900'
+                            ? 'bg-amber-100 text-amber-900'
                             : 'text-zinc-900'
                         )}
                       >
@@ -354,7 +354,7 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                     <td className="py-2 px-3 text-right">
                       <div className="flex items-center justify-end space-x-1" onClick={(e) => e.stopPropagation()}>
                         {isCurrentlyFixing ? (
-                          <span className="px-2 py-0.5 rounded bg-black text-white font-sans text-[10px] font-bold shadow-xs animate-pulse">
+                          <span className="px-2.5 py-0.5 rounded bg-[#0176D3] text-white font-sans text-[10px] font-bold shadow-xs animate-pulse">
                             Fixing...
                           </span>
                         ) : isDegraded ? (
@@ -365,7 +365,7 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
                                 onSelectRoute?.(row.route);
                                 onInvestigateRoute?.(row.route);
                               }}
-                              className="px-2 py-0.5 rounded bg-black hover:bg-zinc-800 text-white font-sans text-[10px] font-bold shadow-xs transition cursor-pointer"
+                              className="px-2.5 py-1 rounded bg-[#0176D3] hover:bg-[#014486] text-white font-sans text-[10px] font-bold shadow-2xs transition cursor-pointer"
                               title="Drive human-in-the-loop investigation on this route"
                             >
                               Drive Flow

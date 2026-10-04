@@ -36,14 +36,14 @@ export const CitationChip: React.FC<CitationChipProps> = ({ citation, onClick, c
       type="button"
       onClick={() => onClick?.(cit)}
       className={cn(
-        'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border transition-all cursor-pointer select-none shadow-2xs',
+        'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium border transition-all cursor-pointer select-none shadow-2xs max-w-full overflow-hidden shrink-0',
         badgeColor,
         className
       )}
       title={`Inspect citation ${cit}`}
     >
-      {icon}
-      <span>{cit}</span>
+      <span className="shrink-0">{icon}</span>
+      <span className="truncate max-w-[120px]">{cit}</span>
     </button>
   );
 };
