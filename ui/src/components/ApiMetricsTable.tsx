@@ -11,7 +11,10 @@ import {
   Filter,
   RefreshCw,
   ExternalLink,
-  ShieldAlert
+  ShieldAlert,
+  GitPullRequest,
+  Database,
+  ArrowRight
 } from 'lucide-react';
 import { RouteMetrics } from '../types';
 import { cn } from '../lib/utils';
@@ -20,6 +23,9 @@ interface ApiMetricsTableProps {
   metrics: Record<string, RouteMetrics> | null;
   onSelectRoute?: (route: string) => void;
   onInvestigateRoute?: (route: string) => void;
+  onViewBlastRadius?: (route: string) => void;
+  onViewDiff?: (route: string) => void;
+  onTriggerAttack?: (route: string) => void;
 }
 
 interface EndpointRow {
@@ -41,7 +47,10 @@ interface EndpointRow {
 export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
   metrics,
   onSelectRoute,
-  onInvestigateRoute
+  onInvestigateRoute,
+  onViewBlastRadius,
+  onViewDiff,
+  onTriggerAttack
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'degraded_failing' | 'healthy'>('all');
@@ -51,9 +60,9 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
   const endpointCatalog: Array<{ route: string; method: 'GET' | 'POST' | 'PUT' | 'DELETE'; description: string }> = [
     { route: '/api/orders', method: 'POST', description: 'Order submission & checkout fulfillment' },
     { route: '/api/products', method: 'GET', description: 'Product catalog search & inventory lookup' },
+    { route: '/api/payments', method: 'POST', description: 'Payment gateway transaction settlement' },
     { route: '/api/customers', method: 'GET', description: 'Customer profiles & account verification' },
     { route: '/api/inventory', method: 'GET', description: 'Warehouse stock levels & sku availability' },
-    { route: '/api/payments', method: 'POST', description: 'Payment gateway transaction settlement' },
     { route: '/api/health', method: 'GET', description: 'Gateway & upstream container health checks' },
   ];
 
@@ -158,275 +167,238 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
   };
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs">
+    <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs flex flex-col h-full justify-between select-none">
       {/* Header Bar */}
-      <div className="p-4 border-b border-zinc-200 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white">
-        <div className="flex items-center space-x-2">
-          <Activity className="w-4 h-4 text-black" />
-          <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-900">
-            Endpoint Telemetry & Percentiles
-          </h3>
-          {degradedCount > 0 && (
-            <span className="px-2 py-0.5 rounded bg-black text-white text-[11px] font-mono font-bold">
-              {degradedCount} Failing / Degraded
-            </span>
-          )}
+      <div>
+        <div className="p-3 border-b border-zinc-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white">
+          <div className="flex items-center space-x-2">
+            <Activity className="w-3.5 h-3.5 text-black" />
+            <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-900 font-mono">
+              Endpoint Telemetry
+            </h3>
+            {degradedCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded bg-black text-white text-[10px] font-mono font-bold">
+                {degradedCount} Impacted
+              </span>
+            )}
+          </div>
+
+          {/* Filter Controls */}
+          <div className="flex items-center space-x-1.5">
+            <div className="relative">
+              <Search className="w-3 h-3 absolute left-2 top-1.5 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Filter route..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-7 pr-2 py-0.5 bg-zinc-50 border border-zinc-200 rounded text-[11px] text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-black w-28 font-mono"
+              />
+            </div>
+
+            <div className="flex bg-zinc-100 p-0.5 rounded border border-zinc-200 text-[10px] font-mono">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('all')}
+                className={cn(
+                  'px-2 py-0.2 rounded transition',
+                  statusFilter === 'all'
+                    ? 'bg-white text-zinc-900 font-bold shadow-xs'
+                    : 'text-zinc-600 hover:text-zinc-900'
+                )}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('degraded_failing')}
+                className={cn(
+                  'px-2 py-0.2 rounded transition',
+                  statusFilter === 'degraded_failing'
+                    ? 'bg-black text-white font-bold shadow-xs'
+                    : 'text-zinc-600 hover:text-zinc-900'
+                )}
+              >
+                Failing
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Search route..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 pr-3 py-1 bg-zinc-50 border border-zinc-200 rounded text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-black w-40"
-            />
+        {/* Blast Radius Cascade Alert */}
+        {degradedCount > 1 && (
+          <div className="bg-zinc-100 border-b border-zinc-300 px-3 py-1.5 flex items-center justify-between text-xs text-zinc-900 font-mono">
+            <div className="flex items-center space-x-1.5 text-[11px] truncate">
+              <Zap className="w-3.5 h-3.5 text-black shrink-0" />
+              <span className="font-bold text-zinc-900">Postgres Pool Contention:</span>
+              <span className="text-zinc-600 truncate">/api/orders lock cascading to products & payments</span>
+            </div>
+            {onViewBlastRadius && (
+              <button
+                type="button"
+                onClick={() => onViewBlastRadius('/api/orders')}
+                className="px-2 py-0.5 bg-black text-white text-[10px] rounded font-bold hover:bg-zinc-800 transition shrink-0 ml-2"
+              >
+                View Map →
+              </button>
+            )}
           </div>
+        )}
 
-          <div className="flex bg-zinc-100 p-0.5 rounded border border-zinc-200 text-xs font-mono">
-            <button
-              type="button"
-              onClick={() => setStatusFilter('all')}
-              className={cn(
-                'px-2 py-0.5 rounded transition',
-                statusFilter === 'all'
-                  ? 'bg-white text-zinc-900 font-bold shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900'
-              )}
-            >
-              All ({rows.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter('degraded_failing')}
-              className={cn(
-                'px-2 py-0.5 rounded transition',
-                statusFilter === 'degraded_failing'
-                  ? 'bg-black text-white font-bold shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900'
-              )}
-            >
-              Failing ({degradedCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter('healthy')}
-              className={cn(
-                'px-2 py-0.5 rounded transition',
-                statusFilter === 'healthy'
-                  ? 'bg-white text-zinc-900 font-bold shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900'
-              )}
-            >
-              Healthy ({rows.length - degradedCount})
-            </button>
-          </div>
+        {/* Table Content */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-zinc-700">
+            <thead className="bg-zinc-50 border-b border-zinc-200 font-mono text-[10px] text-zinc-500 uppercase tracking-wider select-none">
+              <tr>
+                <th className="py-2 px-3 font-semibold">Endpoint</th>
+                <th className="py-2 px-2 font-semibold">Status</th>
+                <th className="py-2 px-2 font-semibold text-right">RPS</th>
+                <th className="py-2 px-2 font-semibold text-right">p50</th>
+                <th className="py-2 px-2 font-semibold text-right">p95 (Tail)</th>
+                <th className="py-2 px-3 font-semibold text-right">Direct Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 font-mono text-[11px]">
+              {filteredRows.map((row) => {
+                const isDegraded = row.status === 'degraded' || row.status === 'failing';
+
+                return (
+                  <tr
+                    key={row.route}
+                    className={cn(
+                      'transition-colors hover:bg-zinc-50/80',
+                      isDegraded ? 'bg-zinc-50/60' : ''
+                    )}
+                  >
+                    {/* Endpoint Name */}
+                    <td className="py-2 px-3">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="px-1 py-0.2 rounded text-[9px] font-bold border bg-zinc-100 text-zinc-800 border-zinc-300">
+                          {row.method}
+                        </span>
+                        <div>
+                          <div className="font-bold text-zinc-900 text-xs flex items-center space-x-1">
+                            <span>{row.route}</span>
+                            {row.route === '/api/orders' && isDegraded && (
+                              <span className="text-[9px] font-sans px-1 py-0.2 rounded bg-black text-white font-bold">
+                                Exploit Point
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Status Badge */}
+                    <td className="py-2 px-2">
+                      {row.status === 'failing' ? (
+                        <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-black text-white">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-400 mr-1 animate-pulse" />
+                          <span>FAILING</span>
+                        </span>
+                      ) : row.status === 'degraded' ? (
+                        <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-zinc-200 text-zinc-900">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 animate-pulse" />
+                          <span>DEGRADED</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded text-[9px] font-medium bg-zinc-50 text-zinc-700 border border-zinc-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1" />
+                          <span>OK</span>
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Throughput */}
+                    <td className="py-2 px-2 text-right">
+                      <span className="text-zinc-900 font-bold">{row.rps.toFixed(1)}</span>
+                    </td>
+
+                    {/* p50 */}
+                    <td className="py-2 px-2 text-right">
+                      <span className="text-zinc-600">{row.p50_ms.toFixed(0)}ms</span>
+                    </td>
+
+                    {/* p95 */}
+                    <td className="py-2 px-2 text-right">
+                      <span
+                        className={cn(
+                          'font-bold px-1 py-0.2 rounded',
+                          row.p95_ms > 2000
+                            ? 'bg-black text-white'
+                            : row.p95_ms > 500
+                            ? 'bg-zinc-200 text-zinc-900'
+                            : 'text-zinc-900'
+                        )}
+                      >
+                        {row.p95_ms >= 1000 ? `${(row.p95_ms / 1000).toFixed(2)}s` : `${row.p95_ms.toFixed(0)}ms`}
+                      </span>
+                    </td>
+
+                    {/* Direct Actions from API End */}
+                    <td className="py-2 px-3 text-right">
+                      <div className="flex items-center justify-end space-x-1">
+                        {isDegraded ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => onInvestigateRoute?.(row.route)}
+                              className="px-2 py-0.5 rounded bg-black hover:bg-zinc-800 text-white font-sans text-[10px] font-bold shadow-xs transition flex items-center space-x-1 cursor-pointer"
+                              title="Run autonomous Gemma RCA on this route"
+                            >
+                              <Zap className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                              <span>Analyze</span>
+                            </button>
+                            {onViewBlastRadius && (
+                              <button
+                                type="button"
+                                onClick={() => onViewBlastRadius(row.route)}
+                                className="px-1.5 py-0.5 rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-800 font-sans text-[10px] font-semibold transition cursor-pointer"
+                                title="Inspect blast radius cascade map"
+                              >
+                                <Database className="w-2.5 h-2.5" />
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            {row.route === '/api/orders' && onTriggerAttack && (
+                              <button
+                                type="button"
+                                onClick={() => onTriggerAttack(row.route)}
+                                className="px-2 py-0.5 rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-800 font-sans text-[10px] font-bold transition flex items-center space-x-1 cursor-pointer"
+                                title="Initiate whitebox attack against this route"
+                              >
+                                <Zap className="w-2.5 h-2.5 text-amber-500" />
+                                <span>Attack</span>
+                              </button>
+                            )}
+                            {onViewDiff && (
+                              <button
+                                type="button"
+                                onClick={() => onViewDiff(row.route)}
+                                className="px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 font-sans text-[10px] transition cursor-pointer"
+                                title="View code diff"
+                              >
+                                <GitPullRequest className="w-2.5 h-2.5" />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Blast Radius Cascade Alert Banner */}
-      {degradedCount > 1 && (
-        <div className="bg-zinc-100 border-b border-zinc-300 px-4 py-2.5 flex items-start space-x-2 text-xs text-zinc-900 font-mono">
-          <Zap className="w-4 h-4 text-black shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <div className="font-bold flex items-center space-x-1.5">
-              <span>Cascading Failure Detected</span>
-              <span className="px-1.5 py-0.2 rounded bg-black text-white text-[10px]">
-                Postgres Pool Contention (max=5)
-              </span>
-            </div>
-            <p className="text-[11px] text-zinc-600 font-sans">
-              <span className="font-bold text-zinc-900">Root Cause:</span> POST /api/orders (SQL Injection hold lock) ➔{' '}
-              <span className="font-bold text-zinc-900">Cascaded:</span> GET /api/products & POST /api/payments.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Table Element */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-zinc-700">
-          <thead className="bg-zinc-50 border-b border-zinc-200 font-mono text-[11px] text-zinc-500 uppercase tracking-wider select-none">
-            <tr>
-              <th
-                onClick={() => toggleSort('route')}
-                className="py-2.5 px-4 font-semibold cursor-pointer hover:text-zinc-900"
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Endpoint & Method</span>
-                  <ArrowUpDown className="w-3 h-3 text-zinc-400" />
-                </div>
-              </th>
-              <th className="py-2.5 px-3 font-semibold">Status</th>
-              <th
-                onClick={() => toggleSort('rps')}
-                className="py-2.5 px-3 font-semibold cursor-pointer hover:text-zinc-900 text-right"
-              >
-                <div className="flex items-center justify-end space-x-1">
-                  <span>RPS</span>
-                  <ArrowUpDown className="w-3 h-3 text-zinc-400" />
-                </div>
-              </th>
-              <th className="py-2.5 px-3 font-semibold text-right">p50</th>
-              <th className="py-2.5 px-3 font-semibold text-right">p90</th>
-              <th
-                onClick={() => toggleSort('p95_ms')}
-                className="py-2.5 px-3 font-semibold cursor-pointer hover:text-zinc-900 text-right"
-              >
-                <div className="flex items-center justify-end space-x-1">
-                  <span>p95 (Tail)</span>
-                  <ArrowUpDown className="w-3 h-3 text-zinc-400" />
-                </div>
-              </th>
-              <th className="py-2.5 px-3 font-semibold text-right">p99</th>
-              <th
-                onClick={() => toggleSort('err_rate')}
-                className="py-2.5 px-3 font-semibold cursor-pointer hover:text-zinc-900 text-right"
-              >
-                <div className="flex items-center justify-end space-x-1">
-                  <span>Err Rate</span>
-                  <ArrowUpDown className="w-3 h-3 text-zinc-400" />
-                </div>
-              </th>
-              <th className="py-2.5 px-4 font-semibold text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-100 font-mono">
-            {filteredRows.map((row) => {
-              const isDegraded = row.status === 'degraded' || row.status === 'failing';
-
-              return (
-                <tr
-                  key={row.route}
-                  className={cn(
-                    'transition-colors hover:bg-zinc-50',
-                    isDegraded ? 'bg-zinc-50/50' : ''
-                  )}
-                >
-                  {/* Endpoint Name */}
-                  <td className="py-3 px-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border bg-zinc-100 text-zinc-800 border-zinc-300">
-                        {row.method}
-                      </span>
-                      <div>
-                        <div className="font-bold text-zinc-900 text-xs flex items-center space-x-1.5">
-                          <span>{row.route}</span>
-                          {row.route === '/api/orders' && isDegraded && (
-                            <span className="text-[10px] font-sans px-1.5 py-0.2 rounded bg-black text-white font-bold">
-                              SQLi Exploit Point
-                            </span>
-                          )}
-                          {row.route === '/api/products' && isDegraded && (
-                            <span className="text-[10px] font-sans px-1.5 py-0.2 rounded bg-zinc-200 text-zinc-800 font-bold">
-                              N+1 Loop Point
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-zinc-500 font-sans truncate max-w-xs">
-                          {row.description}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Status Badge */}
-                  <td className="py-3 px-3">
-                    {row.status === 'failing' ? (
-                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-black text-white border border-zinc-900">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 mr-1 animate-pulse" />
-                        <span>FAILING (500s)</span>
-                      </span>
-                    ) : row.status === 'degraded' ? (
-                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-zinc-100 text-zinc-900 border border-zinc-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 animate-pulse" />
-                        <span>DEGRADED</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-50 text-zinc-700 border border-zinc-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1" />
-                        <span>HEALTHY</span>
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Throughput */}
-                  <td className="py-3 px-3 text-right">
-                    <div className="font-bold text-zinc-900">{row.rps.toFixed(1)} rps</div>
-                  </td>
-
-                  {/* p50 */}
-                  <td className="py-3 px-3 text-right">
-                    <span className="text-zinc-700">{row.p50_ms.toFixed(0)}ms</span>
-                  </td>
-
-                  {/* p90 */}
-                  <td className="py-3 px-3 text-right">
-                    <span className="text-zinc-700">{row.p90_ms.toFixed(0)}ms</span>
-                  </td>
-
-                  {/* p95 */}
-                  <td className="py-3 px-3 text-right">
-                    <span
-                      className={cn(
-                        'font-bold px-1.5 py-0.5 rounded',
-                        row.p95_ms > 2000
-                          ? 'bg-black text-white'
-                          : row.p95_ms > 500
-                          ? 'bg-zinc-200 text-zinc-900'
-                          : 'text-zinc-900'
-                      )}
-                    >
-                      {row.p95_ms >= 1000 ? `${(row.p95_ms / 1000).toFixed(2)}s` : `${row.p95_ms.toFixed(0)}ms`}
-                    </span>
-                  </td>
-
-                  {/* p99 */}
-                  <td className="py-3 px-3 text-right">
-                    <span className="text-zinc-600">
-                      {row.p99_ms >= 1000 ? `${(row.p99_ms / 1000).toFixed(2)}s` : `${row.p99_ms.toFixed(0)}ms`}
-                    </span>
-                  </td>
-
-                  {/* Error Rate */}
-                  <td className="py-3 px-3 text-right">
-                    <span
-                      className={cn(
-                        'font-bold',
-                        row.err_rate > 0.05
-                          ? 'text-black underline'
-                          : row.err_rate > 0
-                          ? 'text-zinc-800'
-                          : 'text-zinc-600'
-                      )}
-                    >
-                      {(row.err_rate * 100).toFixed(1)}%
-                    </span>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="py-3 px-4 text-right">
-                    {isDegraded ? (
-                      <button
-                        type="button"
-                        onClick={() => onInvestigateRoute?.(row.route)}
-                        className="px-2.5 py-1 rounded bg-black hover:bg-zinc-800 text-white font-sans text-xs font-semibold shadow-xs transition inline-flex items-center space-x-1 cursor-pointer"
-                      >
-                        <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
-                        <span>RCA Analysis</span>
-                      </button>
-                    ) : (
-                      <span className="text-[11px] font-sans text-zinc-400">Normal</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Footer hint */}
+      <div className="p-2 border-t border-zinc-100 text-[10px] font-mono text-zinc-400 flex items-center justify-between bg-zinc-50/50">
+        <span>Click 'Analyze' to isolate tainted AST and unified diff</span>
+        <span>Gateway Upstream: :8001 / :8002</span>
       </div>
     </div>
   );

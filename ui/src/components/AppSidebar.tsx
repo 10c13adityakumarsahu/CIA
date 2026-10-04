@@ -1,37 +1,33 @@
 import React, { useState } from 'react';
 import {
   Activity,
-  Terminal,
   Shield,
-  GitPullRequest,
+  FileCode,
   Database,
-  Sparkles,
-  Server,
-  History,
   ShieldCheck,
   CheckCircle2,
-  XCircle,
-  ChevronDown,
-  ChevronRight,
-  ShieldAlert,
-  Cpu,
+  AlertTriangle,
+  Zap,
   RotateCcw,
-  Zap
+  Sparkles,
+  Server,
+  Layers
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { GatewayState } from '../types';
-import { CitationChip } from './CitationChip';
 
-export type MainViewTab = 'overview' | 'investigate' | 'findings' | 'attack_path' | 'blast_radius' | 'mitigation' | 'pitch_rca';
+export type MainViewTab = 'telemetry' | 'scans' | 'code_diff' | 'blast_radius' | 'recovery';
 
 interface AppSidebarProps {
   currentTab: MainViewTab;
   onSelectTab: (tab: MainViewTab) => void;
   state: GatewayState | null;
   activeScenario: string | null;
-  onSelectScenario: (scenario: 'a_exploit' | 'b_regression') => void;
+  isDegraded: boolean;
+  hasReport: boolean;
+  isRecovered: boolean;
+  onInitiateAttack: () => void;
   onReset: () => void;
-  onSelectCitation: (citation: string) => void;
 }
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({
@@ -39,215 +35,176 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onSelectTab,
   state,
   activeScenario,
-  onSelectScenario,
+  isDegraded,
+  hasReport,
+  isRecovered,
+  onInitiateAttack,
   onReset,
-  onSelectCitation
 }) => {
-  const [infraOpen, setInfraOpen] = useState(false);
-  const [ledgerOpen, setLedgerOpen] = useState(false);
-
   const navItems = [
-    { id: 'overview', label: 'Telemetry & Metrics', icon: Activity, badge: 'Live' },
-    { id: 'investigate', label: 'Gemma 4 Investigation', icon: Terminal, badge: 'RCA' },
-    { id: 'findings', label: 'Vulnerabilities & Scans', icon: Shield, badge: 'SAST/SCA' },
-    { id: 'attack_path', label: 'Attack Path Graph', icon: GitPullRequest },
-    { id: 'blast_radius', label: 'Blast Radius Map', icon: Database },
-    { id: 'mitigation', label: 'Mitigation & Safety', icon: ShieldCheck },
-    { id: 'pitch_rca', label: 'Pitch & RCA Deep-Dive', icon: Sparkles, highlight: true },
-  ];
-
-  const healthItems = [
-    { name: 'Gateway', key: 'gateway', port: ':8080' },
-    { name: 'Blue (1.5.0)', key: 'blue', port: ':8001' },
-    { name: 'Green (1.4.0)', key: 'green', port: ':8002' },
-    { name: 'Postgres (db)', key: 'db', port: ':5432' },
-    { name: 'Neo4j (graph)', key: 'neo4j', port: ':7687' },
-    { name: 'Redis (ledger)', key: 'redis', port: ':6379' },
-    { name: 'Registry', key: 'registry', port: ':5000' },
+    {
+      id: 'telemetry' as MainViewTab,
+      step: '1',
+      label: 'Telemetry & Multi-API',
+      description: 'Task-Manager stream & API percentiles',
+      icon: Activity,
+      badge: isDegraded ? 'Critical' : 'Live',
+      badgeColor: isDegraded ? 'bg-red-500 text-white' : 'bg-zinc-100 text-zinc-800'
+    },
+    {
+      id: 'scans' as MainViewTab,
+      step: '2',
+      label: 'Security Scans',
+      description: 'SAST, SCA, DAST, WAF findings',
+      icon: Shield,
+      badge: '20 CVEs',
+      badgeColor: 'bg-zinc-100 text-zinc-800'
+    },
+    {
+      id: 'code_diff' as MainViewTab,
+      step: '3',
+      label: 'Gemma RCA & Code Diff',
+      description: 'Unified Git diff & AI remediation',
+      icon: FileCode,
+      badge: hasReport ? 'Synthesized' : 'Ready',
+      badgeColor: hasReport ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-700'
+    },
+    {
+      id: 'blast_radius' as MainViewTab,
+      step: '4',
+      label: 'Blast Radius Impact',
+      description: 'Cascading pool starvation map',
+      icon: Database,
+      badge: isDegraded ? 'Cascading' : 'Mapped',
+      badgeColor: isDegraded ? 'bg-amber-500 text-white' : 'bg-zinc-100 text-zinc-700'
+    },
+    {
+      id: 'recovery' as MainViewTab,
+      step: '5',
+      label: 'Verified Recovery',
+      description: '1-click safe rollback to v1.4.0',
+      icon: ShieldCheck,
+      badge: isRecovered ? '100% LKG' : 'Failover',
+      badgeColor: isRecovered ? 'bg-emerald-600 text-white' : 'bg-zinc-100 text-zinc-700'
+    },
   ];
 
   const blueWeight = state?.weights?.blue ?? 100;
   const greenWeight = state?.weights?.green ?? 0;
 
-  const releases = state?.ledger_releases || [
-    { version: '1.3.0', status: 'stable', deployed_at: '2026-09-01T00:00:00Z', p95_ms: 110, err_rate: 0.0 },
-    { version: '1.4.0', status: 'stable', deployed_at: '2026-09-15T00:00:00Z', p95_ms: 115, err_rate: 0.0, is_lkg: true },
-    { version: '1.5.0', status: 'current', deployed_at: '2026-10-01T00:00:00Z', p95_ms: 420, err_rate: 0.02 }
-  ];
-
-  const mode = state?.mode || 'LIVE';
-
   return (
-    <aside className="w-64 h-full bg-white border-r border-slate-200 flex flex-col select-none shrink-0 shadow-sm z-30">
-      {/* Brand Header */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-        <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-base shadow-sm">
-            C
-          </div>
-          <div>
-            <div className="flex items-center space-x-1.5">
-              <span className="font-bold text-slate-900 text-sm tracking-tight">CULPRIT</span>
-              <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                v1.5
-              </span>
+    <aside className="w-64 h-full bg-white border-r border-zinc-200 flex flex-col justify-between select-none shrink-0 z-30">
+      {/* Top Header / Branding */}
+      <div>
+        <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center font-black font-mono text-sm">
+              C
             </div>
-            <div className="text-[11px] text-slate-500 truncate">
-              Root-Cause Decision Engine
-            </div>
-          </div>
-        </div>
-
-        {/* Mode Pill */}
-        <span
-          className={cn(
-            'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border flex items-center space-x-1',
-            mode === 'LIVE'
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-amber-50 text-amber-700 border-amber-200'
-          )}
-        >
-          <span className={cn('w-1.5 h-1.5 rounded-full', mode === 'LIVE' ? 'bg-emerald-500' : 'bg-amber-500')} />
-          <span>{mode}</span>
-        </span>
-      </div>
-
-      {/* Main Navigation Items */}
-      <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1">
-          Views & Analysis
-        </div>
-
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = currentTab === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onSelectTab(item.id as MainViewTab)}
-              className={cn(
-                'w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition cursor-pointer',
-                isActive
-                  ? 'bg-blue-50 text-blue-700 font-semibold border border-blue-200/80 shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
-              )}
-            >
-              <div className="flex items-center space-x-2.5">
-                <Icon
-                  className={cn(
-                    'w-4 h-4',
-                    isActive ? 'text-blue-600' : item.highlight ? 'text-amber-500' : 'text-slate-400'
-                  )}
-                />
-                <span className="truncate">{item.label}</span>
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-bold text-zinc-900 text-sm tracking-tight">CULPRIT</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-700 border border-zinc-200 font-bold">
+                  v1.5
+                </span>
               </div>
-              {item.badge && (
+              <div className="text-[11px] text-zinc-500">
+                Root-Cause Decision Engine
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Guided Workflow Steps Navigation */}
+        <div className="p-3 space-y-1">
+          <div className="px-3 pt-2 pb-1 text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold">
+            Investigation Workflow
+          </div>
+
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentTab === item.id;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onSelectTab(item.id)}
+                className={cn(
+                  'w-full text-left px-3 py-2.5 rounded-lg transition flex items-center justify-between group cursor-pointer border',
+                  isActive
+                    ? 'bg-black text-white border-black shadow-xs'
+                    : 'bg-transparent border-transparent hover:bg-zinc-100 text-zinc-700'
+                )}
+              >
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <span
+                    className={cn(
+                      'w-5 h-5 rounded text-[10px] font-mono font-bold flex items-center justify-center shrink-0 border',
+                      isActive
+                        ? 'bg-zinc-800 text-white border-zinc-700'
+                        : 'bg-zinc-100 text-zinc-600 border-zinc-200 group-hover:border-zinc-300'
+                    )}
+                  >
+                    {item.step}
+                  </span>
+                  <div className="truncate">
+                    <div className={cn('text-xs font-bold leading-tight truncate', isActive ? 'text-white' : 'text-zinc-900')}>
+                      {item.label}
+                    </div>
+                    <div className={cn('text-[10px] truncate leading-tight', isActive ? 'text-zinc-300' : 'text-zinc-500')}>
+                      {item.description}
+                    </div>
+                  </div>
+                </div>
+
                 <span
                   className={cn(
-                    'text-[10px] font-mono px-1.5 py-0.2 rounded border',
-                    isActive
-                      ? 'bg-blue-100 text-blue-800 border-blue-200'
-                      : 'bg-slate-100 text-slate-500 border-slate-200'
+                    'text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded shrink-0 ml-1',
+                    isActive ? 'bg-zinc-800 text-white border border-zinc-700' : item.badgeColor
                   )}
                 >
                   {item.badge}
                 </span>
-              )}
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-        {/* Collapsible Infrastructure Health */}
-        <div className="pt-3 border-t border-slate-100 mt-2">
+      {/* Bottom Live System Indicator & Controls */}
+      <div className="p-3 border-t border-zinc-200 space-y-2 bg-zinc-50/50">
+        <div className="bg-white p-2.5 rounded-lg border border-zinc-200 text-xs font-mono space-y-1">
+          <div className="flex items-center justify-between text-[11px] text-zinc-500">
+            <span>TRAFFIC WEIGHTS</span>
+            <span className="text-zinc-900 font-bold">{isRecovered ? 'v1.4.0 (LKG)' : 'v1.5.0 (Culprit)'}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs font-bold">
+            <span className="text-zinc-700">Blue (v1.5.0): {blueWeight}%</span>
+            <span className="text-zinc-700">Green (v1.4.0): {greenWeight}%</span>
+          </div>
+        </div>
+
+        {/* Action Buttons in Sidebar */}
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => setInfraOpen(!infraOpen)}
-            className="w-full flex items-center justify-between px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-800"
+            onClick={onInitiateAttack}
+            className="py-1.5 px-2 bg-black hover:bg-zinc-800 text-white rounded text-[11px] font-bold flex items-center justify-center space-x-1 transition cursor-pointer shadow-xs"
+            title="Inject real-time SQL injection burst"
           >
-            <span className="flex items-center">
-              <Server className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-              Infrastructure (7/7)
-            </span>
-            {infraOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+            <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+            <span>Attack</span>
           </button>
-
-          {infraOpen && (
-            <div className="mt-1 space-y-1 bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs font-mono">
-              {healthItems.map((item) => {
-                const isHealthy = state?.health ? (state.health as any)[item.key] !== false : true;
-                return (
-                  <div key={item.key} className="flex items-center justify-between py-0.5">
-                    <span className="text-slate-600 text-[11px]">{item.name}</span>
-                    <div className="flex items-center space-x-1">
-                      <span className="text-slate-400 text-[10px]">{item.port}</span>
-                      {isHealthy ? (
-                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                      ) : (
-                        <XCircle className="w-3 h-3 text-red-500" />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Collapsible Release Ledger */}
-        <div className="pt-2">
           <button
             type="button"
-            onClick={() => setLedgerOpen(!ledgerOpen)}
-            className="w-full flex items-center justify-between px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-800"
+            onClick={onReset}
+            className="py-1.5 px-2 bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-300 rounded text-[11px] font-bold flex items-center justify-center space-x-1 transition cursor-pointer"
+            title="Reset environment"
           >
-            <span className="flex items-center">
-              <History className="w-3.5 h-3.5 mr-1.5 text-purple-500" />
-              Release Ledger
-            </span>
-            {ledgerOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+            <RotateCcw className="w-3 h-3 text-zinc-600" />
+            <span>Reset</span>
           </button>
-
-          {ledgerOpen && (
-            <div className="mt-1 space-y-1.5 bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs font-mono">
-              {releases.map((rel) => (
-                <div
-                  key={rel.version}
-                  className="p-1.5 bg-white rounded border border-slate-200 space-y-1"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 text-[11px]">v{rel.version}</span>
-                    {rel.is_lkg && (
-                      <span className="px-1 py-0.2 rounded text-[9px] bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
-                        LKG
-                      </span>
-                    )}
-                    {rel.status === 'current' && (
-                      <span className="px-1 py-0.2 rounded text-[9px] bg-blue-100 text-blue-800 border border-blue-200">
-                        CURRENT
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-slate-500 flex justify-between">
-                    <span>p95: {rel.p95_ms}ms</span>
-                    <span>err: {(rel.err_rate * 100).toFixed(1)}%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </nav>
-
-      {/* Footer Traffic Routing Indicator */}
-      <div className="p-3 border-t border-slate-100 bg-slate-50/80 text-xs font-mono">
-        <div className="flex justify-between text-[10px] text-slate-500 mb-1">
-          <span>Blue (1.5.0): {blueWeight}%</span>
-          <span>Green (1.4.0): {greenWeight}%</span>
-        </div>
-        <div className="w-full h-1.5 rounded-full overflow-hidden bg-slate-200 flex">
-          <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${blueWeight}%` }} />
-          <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${greenWeight}%` }} />
         </div>
       </div>
     </aside>
