@@ -6,12 +6,11 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   ReferenceLine,
   CartesianGrid
 } from 'recharts';
 import { RouteMetrics } from '../types';
-import { Activity, Clock, Zap, AlertOctagon } from 'lucide-react';
+import { Activity, Zap, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface MetricsChartProps {
   metrics: Record<string, RouteMetrics> | null;
@@ -33,7 +32,6 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
     rps: 15.4
   };
 
-  // Generate simulated historical trend if history is not provided
   const chartData = currentMetric.history || [
     { time: '-60s', p50: 110, p95: 125, err_rate: 0.0 },
     { time: '-50s', p50: 115, p95: 130, err_rate: 0.0 },
@@ -47,78 +45,87 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
   const isDegraded = currentMetric.p95_ms > 1000 || currentMetric.err_rate > 0.01;
 
   return (
-    <div className="bg-[#111827] border-b border-[#334155] p-4 flex flex-col space-y-3">
+    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col space-y-4">
       {/* Top summary cards */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Activity className="w-4 h-4 text-cyan-400" />
-          <span className="font-bold text-xs uppercase tracking-wider text-slate-300">
-            Live Gateway Telemetry
-          </span>
-          <span className="px-2 py-0.5 rounded text-xs font-mono bg-[#0B0F19] text-cyan-300 border border-cyan-900">
-            {selectedRoute}
-          </span>
+        <div className="flex items-center space-x-2.5">
+          <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center">
+            <Activity className="w-4 h-4 text-blue-600" />
+          </div>
+          <div>
+            <div className="font-bold text-xs uppercase tracking-wider text-slate-800 flex items-center space-x-2">
+              <span>Live Gateway Telemetry</span>
+              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-700 border border-slate-200">
+                {selectedRoute}
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-500">
+              Real-time reverse proxy latency and throughput statistics
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           {/* p50 */}
-          <div className="bg-[#0B0F19] px-3 py-1.5 rounded border border-[#334155] flex items-center space-x-2 font-mono text-xs">
-            <span className="text-slate-400">p50:</span>
-            <span className="text-cyan-400 font-bold">{Math.round(currentMetric.p50_ms)}ms</span>
+          <div className="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center space-x-1.5 font-mono text-xs">
+            <span className="text-slate-500">p50:</span>
+            <span className="text-blue-600 font-bold">{Math.round(currentMetric.p50_ms)}ms</span>
           </div>
 
           {/* p95 */}
-          <div className="bg-[#0B0F19] px-3 py-1.5 rounded border border-[#334155] flex items-center space-x-2 font-mono text-xs">
-            <span className="text-slate-400">p95:</span>
-            <span className={isDegraded ? 'text-amber-400 font-bold animate-pulse' : 'text-slate-200 font-bold'}>
+          <div className="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center space-x-1.5 font-mono text-xs">
+            <span className="text-slate-500">p95:</span>
+            <span className={isDegraded ? 'text-red-600 font-bold animate-pulse' : 'text-slate-800 font-bold'}>
               {Math.round(currentMetric.p95_ms)}ms
             </span>
           </div>
 
           {/* Error Rate */}
-          <div className="bg-[#0B0F19] px-3 py-1.5 rounded border border-[#334155] flex items-center space-x-2 font-mono text-xs">
-            <span className="text-slate-400">Err:</span>
-            <span className={currentMetric.err_rate > 0.01 ? 'text-red-400 font-bold' : 'text-emerald-400 font-bold'}>
+          <div className="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center space-x-1.5 font-mono text-xs">
+            <span className="text-slate-500">Err:</span>
+            <span className={currentMetric.err_rate > 0.01 ? 'text-red-600 font-bold' : 'text-emerald-600 font-bold'}>
               {(currentMetric.err_rate * 100).toFixed(1)}%
             </span>
           </div>
 
           {/* RPS */}
-          <div className="bg-[#0B0F19] px-3 py-1.5 rounded border border-[#334155] flex items-center space-x-2 font-mono text-xs">
-            <span className="text-slate-400">RPS:</span>
-            <span className="text-slate-200 font-bold">{currentMetric.rps || 12.0}</span>
+          <div className="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center space-x-1.5 font-mono text-xs">
+            <span className="text-slate-500">RPS:</span>
+            <span className="text-slate-800 font-bold">{currentMetric.rps || 12.0}</span>
           </div>
         </div>
       </div>
 
       {/* Latency & Error Chart */}
-      <div className="h-36 w-full bg-[#0B0F19] rounded-lg border border-[#334155] p-2">
+      <div className="h-44 w-full bg-slate-50/50 rounded-lg border border-slate-200 p-2">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-            <XAxis dataKey="time" stroke="#64748B" tick={{ fontSize: 11 }} />
-            <YAxis stroke="#64748B" tick={{ fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+            <XAxis dataKey="time" stroke="#94A3B8" tick={{ fontSize: 11 }} />
+            <YAxis stroke="#94A3B8" tick={{ fontSize: 11 }} />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#111827',
-                borderColor: '#334155',
-                borderRadius: '0.375rem',
+                backgroundColor: '#FFFFFF',
+                borderColor: '#CBD5E1',
+                borderRadius: '0.5rem',
                 fontSize: '12px',
-                fontFamily: 'monospace'
+                color: '#0F172A',
+                fontFamily: 'monospace',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
               }}
             />
             {markerText && (
               <ReferenceLine
                 x="now"
-                stroke="#EF4444"
+                stroke="#DC2626"
                 strokeDasharray="3 3"
-                label={{ value: markerText, fill: '#EF4444', fontSize: 11, position: 'insideTopRight' }}
+                label={{ value: markerText, fill: '#DC2626', fontSize: 11, position: 'insideTopRight' }}
               />
             )}
             <Line
               type="monotone"
               dataKey="p95"
-              stroke="#F59E0B"
+              stroke="#D97706"
               strokeWidth={2}
               dot={false}
               name="p95 (ms)"
@@ -126,7 +133,7 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
             <Line
               type="monotone"
               dataKey="p50"
-              stroke="#06B6D4"
+              stroke="#2563EB"
               strokeWidth={2}
               dot={false}
               name="p50 (ms)"
@@ -137,16 +144,19 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
 
       {/* Real-Time Degradation Alert Banner */}
       {isDegraded && (
-        <div className="bg-red-950/80 border border-red-700/80 p-3 rounded-lg flex items-center justify-between text-xs animate-in fade-in">
+        <div className="bg-red-50 border border-red-200 p-3.5 rounded-lg flex items-center justify-between text-xs animate-in fade-in">
           <div className="flex items-center space-x-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-ping shrink-0" />
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0" />
             <div>
-              <div className="font-bold text-red-200 flex items-center space-x-2">
-                <span>INCIDENT ANOMALY DETECTED:</span>
-                <span className="font-mono text-red-300">p95 @ {Math.round(currentMetric.p95_ms)}ms (SLO: 150ms)</span>
+              <div className="font-bold text-red-900 flex items-center space-x-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                <span>ACTIVE INCIDENT: High Latency Surge Detected</span>
+                <span className="font-mono font-bold text-red-700 bg-red-100 px-1.5 py-0.2 rounded border border-red-200">
+                  p95 @ {Math.round(currentMetric.p95_ms)}ms
+                </span>
               </div>
-              <p className="text-[11px] text-red-300 font-mono">
-                Postgres connection pool starvation detected (5/5 connections blocked). Gateway timeouts occurring on checkout routes.
+              <p className="text-[11px] text-red-700 font-mono mt-0.5">
+                Database connection pool (5/5) blocked. Gateway timeouts causing HTTP 504/500 errors.
               </p>
             </div>
           </div>
@@ -155,8 +165,9 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
             <button
               type="button"
               onClick={onInvestigate}
-              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold font-mono shrink-0 shadow-md flex items-center space-x-1"
+              className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold font-mono shrink-0 shadow-xs flex items-center space-x-1.5 transition active:scale-98"
             >
+              <Zap className="w-3.5 h-3.5" />
               <span>Correlate RCA</span>
             </button>
           )}

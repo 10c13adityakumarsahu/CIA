@@ -4,13 +4,11 @@ import {
   Background,
   Controls,
   Node,
-  Edge,
-  MarkerType
+  Edge
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { BlastRadius, NodeImpact } from '../types';
 import { CitationChip } from './CitationChip';
-import { Database, Route, Server, Lock, Layers, AlertTriangle } from 'lucide-react';
 
 interface BlastRadiusGraphProps {
   blastRadius: BlastRadius | null;
@@ -31,17 +29,17 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
       { id: 'db_orders', label: 'Table: orders', type: 'table', impact: 'confirmed', pos: [720, 340] },
     ];
 
-    // Helper for impact coloring
+    // Helper for impact coloring (light theme)
     const getImpactStyle = (impact: NodeImpact) => {
       switch (impact) {
         case 'confirmed':
-          return { border: 'border-red-500 bg-red-950/40', badge: 'bg-red-950 text-red-300 border-red-800', dot: 'bg-red-400' };
+          return { border: 'border-red-300 bg-red-50/90', badge: 'bg-red-100 text-red-800 border-red-200', dot: 'bg-red-500' };
         case 'likely':
-          return { border: 'border-amber-500 bg-amber-950/40', badge: 'bg-amber-950 text-amber-300 border-amber-800', dot: 'bg-amber-400' };
+          return { border: 'border-amber-300 bg-amber-50/90', badge: 'bg-amber-100 text-amber-800 border-amber-200', dot: 'bg-amber-500' };
         case 'possible':
-          return { border: 'border-yellow-500 bg-yellow-950/40', badge: 'bg-yellow-950 text-yellow-300 border-yellow-800', dot: 'bg-yellow-400' };
+          return { border: 'border-yellow-300 bg-yellow-50/90', badge: 'bg-yellow-100 text-yellow-800 border-yellow-200', dot: 'bg-yellow-500' };
         default:
-          return { border: 'border-slate-700 bg-slate-900', badge: 'bg-slate-800 text-slate-400 border-slate-700', dot: 'bg-slate-400' };
+          return { border: 'border-slate-200 bg-white', badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
       }
     };
 
@@ -64,13 +62,13 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
         position: { x: n.pos[0], y: n.pos[1] },
         data: {
           label: (
-            <div className={`p-3 rounded-lg border ${style.border} text-xs font-mono w-56 text-left shadow-lg backdrop-blur-sm`}>
+            <div className={`p-3 rounded-xl border-2 ${style.border} text-xs font-mono w-56 text-left shadow-sm backdrop-blur-sm`}>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-slate-100 font-bold truncate">{n.label}</span>
-                <span className={`w-2 h-2 rounded-full ${style.dot}`} />
+                <span className="text-slate-800 font-bold truncate text-[11px]">{n.label}</span>
+                <span className={`w-2.5 h-2.5 rounded-full ${style.dot}`} />
               </div>
               <div className="flex items-center justify-between mt-2">
-                <span className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded border ${style.badge}`}>
+                <span className={`text-[10px] uppercase font-mono font-semibold px-1.5 py-0.5 rounded border ${style.badge}`}>
                   {impact}
                 </span>
                 {cite && (
@@ -84,28 +82,28 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
     });
 
     const flowEdges: Edge[] = [
-      { id: 'e-gw-orders', source: 'gw', target: 'r_orders', animated: true, style: { stroke: '#06B6D4' } },
-      { id: 'e-gw-prod', source: 'gw', target: 'r_products', animated: true, style: { stroke: '#06B6D4' } },
-      { id: 'e-orders-fn', source: 'r_orders', target: 'fn_orders', animated: true, style: { stroke: '#EF4444' } },
-      { id: 'e-orders-pool', source: 'r_orders', target: 'pool', animated: true, style: { stroke: '#F59E0B' } },
-      { id: 'e-prod-pool', source: 'r_products', target: 'pool', animated: true, style: { stroke: '#F59E0B' } },
-      { id: 'e-fn-cust', source: 'fn_orders', target: 'db_customers', animated: true, style: { stroke: '#EAB308' } },
-      { id: 'e-fn-pay', source: 'fn_orders', target: 'db_payments', animated: true, style: { stroke: '#EAB308' } },
-      { id: 'e-fn-ord', source: 'fn_orders', target: 'db_orders', animated: true, style: { stroke: '#EF4444' } },
-      { id: 'e-pool-inv', source: 'pool', target: 'db_inventory', animated: true, style: { stroke: '#F59E0B' } },
+      { id: 'e-gw-orders', source: 'gw', target: 'r_orders', animated: true, style: { stroke: '#0284C7' } },
+      { id: 'e-gw-prod', source: 'gw', target: 'r_products', animated: true, style: { stroke: '#0284C7' } },
+      { id: 'e-orders-fn', source: 'r_orders', target: 'fn_orders', animated: true, style: { stroke: '#DC2626' } },
+      { id: 'e-orders-pool', source: 'r_orders', target: 'pool', animated: true, style: { stroke: '#D97706' } },
+      { id: 'e-prod-pool', source: 'r_products', target: 'pool', animated: true, style: { stroke: '#D97706' } },
+      { id: 'e-fn-cust', source: 'fn_orders', target: 'db_customers', animated: true, style: { stroke: '#CA8A04' } },
+      { id: 'e-fn-pay', source: 'fn_orders', target: 'db_payments', animated: true, style: { stroke: '#CA8A04' } },
+      { id: 'e-fn-ord', source: 'fn_orders', target: 'db_orders', animated: true, style: { stroke: '#DC2626' } },
+      { id: 'e-pool-inv', source: 'pool', target: 'db_inventory', animated: true, style: { stroke: '#D97706' } },
     ];
 
     return { nodes: flowNodes, edges: flowEdges };
   }, [blastRadius, onSelectCitation]);
 
   return (
-    <div className="w-full h-full bg-[#0B0F19] relative">
-      <div className="absolute top-4 left-4 z-10 bg-[#111827]/90 backdrop-blur border border-[#334155] px-3 py-1.5 rounded-lg text-xs font-mono text-slate-300 flex items-center space-x-3">
-        <span className="font-bold text-slate-100">Blast Radius Graph</span>
-        <div className="flex items-center space-x-2 text-[11px]">
-          <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-red-400 mr-1" /> Confirmed</span>
-          <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-amber-400 mr-1" /> Likely</span>
-          <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-yellow-400 mr-1" /> Possible</span>
+    <div className="w-full h-full bg-[#F8FAFC] relative">
+      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur border border-slate-200 px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 shadow-sm flex items-center space-x-3">
+        <span className="font-bold text-slate-900">Blast Radius Graph</span>
+        <div className="flex items-center space-x-2.5 text-[11px]">
+          <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-red-500 mr-1" /> Confirmed</span>
+          <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-amber-500 mr-1" /> Likely</span>
+          <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-yellow-500 mr-1" /> Possible</span>
         </div>
       </div>
       <ReactFlow
@@ -113,10 +111,10 @@ export const BlastRadiusGraph: React.FC<BlastRadiusGraphProps> = ({ blastRadius,
         edges={edges}
         fitView
         nodesDraggable={true}
-        className="bg-[#0B0F19]"
+        className="bg-[#F8FAFC]"
       >
-        <Background color="#1E293B" gap={16} />
-        <Controls className="bg-[#111827] border border-[#334155] fill-slate-300" />
+        <Background color="#CBD5E1" gap={16} />
+        <Controls className="bg-white border border-slate-200 fill-slate-700 shadow-sm rounded-lg" />
       </ReactFlow>
     </div>
   );

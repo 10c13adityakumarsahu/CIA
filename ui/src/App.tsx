@@ -18,7 +18,7 @@ import {
   resolveCitation
 } from './lib/api';
 import { Header } from './components/Header';
-import { LeftSidebar } from './components/LeftSidebar';
+import { AppSidebar, MainViewTab } from './components/AppSidebar';
 import { MetricsChart } from './components/MetricsChart';
 import { FindingsRail } from './components/FindingsRail';
 import { InvestigationFeed } from './components/InvestigationFeed';
@@ -29,11 +29,10 @@ import { PitchRcaView } from './components/PitchRcaView';
 import { IncidentStepper, IncidentStep } from './components/IncidentStepper';
 import { ReportExportModal } from './components/ReportExportModal';
 import { CitationDrawer } from './components/CitationDrawer';
-import { Terminal, Shield, GitPullRequest, Activity, AlertCircle, Sparkles } from 'lucide-react';
-import { cn } from './lib/utils';
+import { AlertCircle, ArrowRight, ShieldAlert, Cpu, CheckCircle2, Sparkles } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'investigate' | 'attack_path' | 'blast_radius' | 'mitigation' | 'pitch_rca'>('investigate');
+  const [currentTab, setCurrentTab] = useState<MainViewTab>('overview');
   const [state, setState] = useState<GatewayState | null>(null);
   const [metrics, setMetrics] = useState<Record<string, RouteMetrics> | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
@@ -48,7 +47,7 @@ export function App() {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<IncidentStep>('telemetry');
 
-  // Initial load and polling
+  // Initial load and periodic polling
   const loadInitialData = useCallback(async () => {
     try {
       const [s, m, f] = await Promise.all([
@@ -87,6 +86,7 @@ export function App() {
       setReport(null);
       setVerification(null);
       setMarkerText(scenario === 'a_exploit' ? 'Exploit Burst Injected' : '100% Shift to 1.5.0');
+      setCurrentStep('telemetry');
       await startScenario(scenario);
       await loadInitialData();
     } catch (err: any) {
@@ -101,6 +101,7 @@ export function App() {
       setVerification(null);
       setEvents([]);
       setMarkerText(undefined);
+      setCurrentStep('telemetry');
       await resetScenario();
       await loadInitialData();
     } catch (err: any) {
@@ -110,6 +111,8 @@ export function App() {
 
   const handleInvestigate = async () => {
     setIsInvestigating(true);
+    setCurrentTab('investigate');
+    setCurrentStep('gemma_rca');
     setEvents([]);
     setReport(null);
     setVerification(null);
@@ -126,6 +129,7 @@ export function App() {
         },
         onReport: (rep) => {
           setReport(rep);
+          setCurrentStep('blast_radius');
         },
         onVerification: (ver) => {
           setVerification(ver);
@@ -163,203 +167,216 @@ export function App() {
   const handleStepSelect = (step: IncidentStep) => {
     setCurrentStep(step);
     if (step === 'telemetry') {
-      setActiveTab('investigate');
+      setCurrentTab('overview');
     } else if (step === 'scans') {
-      setActiveTab('pitch_rca');
+      setCurrentTab('findings');
     } else if (step === 'gemma_rca') {
-      setActiveTab('investigate');
+      setCurrentTab('investigate');
     } else if (step === 'blast_radius') {
-      setActiveTab('blast_radius');
+      setCurrentTab('blast_radius');
     } else if (step === 'mitigate') {
-      setActiveTab('mitigation');
+      setCurrentTab('mitigation');
     }
   };
 
   const mode = state?.mode || 'LIVE';
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#0B0F19] text-[#E2E8F0] overflow-hidden">
-      {/* Top Header */}
-      <Header
-        mode={mode}
+    <div className="flex h-screen w-screen bg-[#F8FAFC] text-slate-900 overflow-hidden font-sans">
+      {/* Clean Left Navigation Sidebar */}
+      <AppSidebar
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
+        state={state}
         activeScenario={activeScenario}
-        isInvestigating={isInvestigating}
         onSelectScenario={handleSelectScenario}
         onReset={handleReset}
-        onInvestigate={handleInvestigate}
+        onSelectCitation={handleSelectCitation}
       />
 
-      {/* Guided Incident Lifecycle Stepper */}
-      <IncidentStepper
-        currentStep={currentStep}
-        onSelectStep={handleStepSelect}
-        onExportReport={() => setIsExportOpen(true)}
-        isDegraded={isDegraded}
-        hasReport={report !== null}
-        isInvestigating={isInvestigating}
-      />
-
-      {/* Optional Error Banner */}
-      {errorBanner && (
-        <div className="bg-red-950 border-b border-red-800 px-6 py-2 flex items-center justify-between text-xs text-red-200">
-          <div className="flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-red-400" />
-            <span>{errorBanner}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setErrorBanner(null)}
-            className="text-red-400 hover:text-white"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* Main 3-Column Command Center */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Column: Health, Weights, Ledger */}
-        <LeftSidebar state={state} onSelectCitation={handleSelectCitation} />
-
-        {/* Center Column: Telemetry + Tabs */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0B0F19]">
-          {/* Top Live Latency & Error Chart */}
-          <MetricsChart
-            metrics={metrics}
-            selectedRoute="/api/orders|all"
-            markerText={markerText}
-            onInvestigate={handleInvestigate}
-          />
-
-          {/* Navigation Tab Bar */}
-          <div className="flex items-center justify-between px-6 border-b border-[#334155] bg-[#111827] h-12 shrink-0">
-            <div className="flex items-center space-x-1 h-full">
-              <button
-                type="button"
-                onClick={() => setActiveTab('investigate')}
-                className={cn(
-                  'h-full px-4 text-xs font-bold uppercase tracking-wider flex items-center space-x-2 border-b-2 transition select-none',
-                  activeTab === 'investigate'
-                    ? 'border-blue-500 text-blue-400 bg-blue-950/20'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                )}
-              >
-                <Terminal className="w-3.5 h-3.5" />
-                <span>Investigation Feed</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('attack_path')}
-                className={cn(
-                  'h-full px-4 text-xs font-bold uppercase tracking-wider flex items-center space-x-2 border-b-2 transition select-none',
-                  activeTab === 'attack_path'
-                    ? 'border-cyan-500 text-cyan-400 bg-cyan-950/20'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                )}
-              >
-                <GitPullRequest className="w-3.5 h-3.5" />
-                <span>Attack Path</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('blast_radius')}
-                className={cn(
-                  'h-full px-4 text-xs font-bold uppercase tracking-wider flex items-center space-x-2 border-b-2 transition select-none',
-                  activeTab === 'blast_radius'
-                    ? 'border-purple-500 text-purple-400 bg-purple-950/20'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                )}
-              >
-                <Activity className="w-3.5 h-3.5" />
-                <span>Blast Radius</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('mitigation')}
-                className={cn(
-                  'h-full px-4 text-xs font-bold uppercase tracking-wider flex items-center space-x-2 border-b-2 transition select-none',
-                  activeTab === 'mitigation'
-                    ? 'border-emerald-500 text-emerald-400 bg-emerald-950/20'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                )}
-              >
-                <Shield className="w-3.5 h-3.5" />
-                <span>Mitigation & Preconditions</span>
-                {report?.mitigations && report.mitigations.length > 0 && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping ml-1" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('pitch_rca')}
-                className={cn(
-                  'h-full px-4 text-xs font-bold uppercase tracking-wider flex items-center space-x-2 border-b-2 transition select-none',
-                  activeTab === 'pitch_rca'
-                    ? 'border-amber-500 text-amber-300 bg-amber-950/20'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                )}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Pitch & RCA Deep-Dive</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Tab Views */}
-          <div className="flex-1 overflow-hidden relative">
-            {activeTab === 'investigate' && (
-              <InvestigationFeed
-                events={events}
-                report={report}
-                verification={verification}
-                isInvestigating={isInvestigating}
-                onSelectCitation={handleSelectCitation}
-              />
-            )}
-
-            {activeTab === 'attack_path' && (
-              <AttackPathGraph
-                report={report}
-                onSelectCitation={handleSelectCitation}
-              />
-            )}
-
-            {activeTab === 'blast_radius' && (
-              <BlastRadiusGraph
-                blastRadius={report?.blast_radius || null}
-                onSelectCitation={handleSelectCitation}
-              />
-            )}
-
-            {activeTab === 'mitigation' && (
-              <MitigationView
-                mitigations={report?.mitigations || []}
-                rejectedOptions={report?.rejected_options || []}
-                onSelectCitation={handleSelectCitation}
-                onMitigationExecuted={handleMitigationExecuted}
-              />
-            )}
-
-            {activeTab === 'pitch_rca' && (
-              <PitchRcaView
-                activeScenario={activeScenario}
-                onSelectCitation={handleSelectCitation}
-                onTriggerScenario={handleSelectScenario}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Security Findings Rail */}
-        <FindingsRail
-          findings={findings}
-          findingVerdicts={report?.finding_verdicts}
-          onSelectCitation={handleSelectCitation}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Top Header */}
+        <Header
+          mode={mode}
+          activeScenario={activeScenario}
+          isInvestigating={isInvestigating}
+          onInvestigate={handleInvestigate}
+          onExportReport={() => setIsExportOpen(true)}
         />
+
+        {/* Guided Workflow Stepper */}
+        <IncidentStepper
+          currentStep={currentStep}
+          onSelectStep={handleStepSelect}
+          onExportReport={() => setIsExportOpen(true)}
+          isDegraded={isDegraded}
+          hasReport={report !== null}
+          isInvestigating={isInvestigating}
+        />
+
+        {/* Error Notification Banner */}
+        {errorBanner && (
+          <div className="bg-red-50 border-b border-red-200 px-6 py-2 flex items-center justify-between text-xs text-red-800">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <span>{errorBanner}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setErrorBanner(null)}
+              className="text-red-600 hover:text-red-900 font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Dynamic Main View */}
+        <main className="flex-1 overflow-hidden relative">
+          {currentTab === 'overview' && (
+            <div className="h-full overflow-y-auto p-6 space-y-6">
+              {/* Telemetry Chart Component */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                <MetricsChart
+                  metrics={metrics}
+                  selectedRoute="/api/orders|all"
+                  markerText={markerText}
+                  onInvestigate={handleInvestigate}
+                />
+              </div>
+
+              {/* Quick Incident Insights Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Vulnerability Scans
+                    </span>
+                    <ShieldAlert className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-black text-slate-900">
+                      {findings.length} Findings
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      SAST (AST tainted sql), SCA (CVE-2024-41123, CVE-2023-43665), and DAST injection points.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentTab('findings')}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer"
+                  >
+                    <span>View All Scans & CVEs</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Gemma 4 RCA Engine
+                    </span>
+                    <Sparkles className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-black text-slate-900">
+                      {report ? report.verdict : isInvestigating ? 'Analyzing...' : 'Ready'}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {report?.incident_summary || 'Multi-tool agent correlating logs, tainted code ASTs, and blast radius.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleInvestigate}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer"
+                  >
+                    <span>{report ? 'View Investigation Feed' : 'Run Gemma RCA Now'}</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Mitigation & Recovery
+                    </span>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-black text-slate-900">
+                      {report?.mitigations?.length || 0} Safe Actions
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Deterministic verification ensures rollbacks target only clean versions (v1.4.0 LKG).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentTab('mitigation')}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer"
+                  >
+                    <span>Inspect Mitigation Options</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentTab === 'investigate' && (
+            <InvestigationFeed
+              events={events}
+              report={report}
+              verification={verification}
+              isInvestigating={isInvestigating}
+              onSelectCitation={handleSelectCitation}
+            />
+          )}
+
+          {currentTab === 'findings' && (
+            <div className="h-full p-4">
+              <FindingsRail
+                findings={findings}
+                findingVerdicts={report?.finding_verdicts}
+                onSelectCitation={handleSelectCitation}
+              />
+            </div>
+          )}
+
+          {currentTab === 'attack_path' && (
+            <AttackPathGraph
+              report={report}
+              onSelectCitation={handleSelectCitation}
+            />
+          )}
+
+          {currentTab === 'blast_radius' && (
+            <BlastRadiusGraph
+              blastRadius={report?.blast_radius || null}
+              onSelectCitation={handleSelectCitation}
+            />
+          )}
+
+          {currentTab === 'mitigation' && (
+            <MitigationView
+              mitigations={report?.mitigations || []}
+              rejectedOptions={report?.rejected_options || []}
+              onSelectCitation={handleSelectCitation}
+              onMitigationExecuted={handleMitigationExecuted}
+            />
+          )}
+
+          {currentTab === 'pitch_rca' && (
+            <PitchRcaView
+              activeScenario={activeScenario}
+              onSelectCitation={handleSelectCitation}
+              onTriggerScenario={handleSelectScenario}
+            />
+          )}
+        </main>
       </div>
 
       {/* Slide-out Citation Code/Log Drawer */}
@@ -382,3 +399,4 @@ export function App() {
 }
 
 export default App;
+

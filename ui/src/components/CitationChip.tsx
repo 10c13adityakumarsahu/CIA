@@ -11,24 +11,24 @@ interface CitationChipProps {
 export const CitationChip: React.FC<CitationChipProps> = ({ citation, onClick, className }) => {
   const cit = citation.trim();
 
-  let icon = <FileText className="w-3 h-3 mr-1 text-slate-400" />;
-  let badgeColor = 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700';
+  let icon = <FileText className="w-3 h-3 mr-1 text-slate-500" />;
+  let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200';
 
   if (cit.startsWith('LOG-')) {
-    icon = <Activity className="w-3 h-3 mr-1 text-cyan-400" />;
-    badgeColor = 'bg-cyan-950/60 text-cyan-300 border-cyan-800/80 hover:bg-cyan-900/80';
+    icon = <Activity className="w-3 h-3 mr-1 text-cyan-600" />;
+    badgeColor = 'bg-cyan-50 text-cyan-800 border-cyan-200 hover:bg-cyan-100';
   } else if (cit.startsWith('SAST-') || cit.startsWith('SCA-') || cit.startsWith('DAST-')) {
-    icon = <AlertTriangle className="w-3 h-3 mr-1 text-amber-400" />;
-    badgeColor = 'bg-amber-950/60 text-amber-300 border-amber-800/80 hover:bg-amber-900/80';
+    icon = <AlertTriangle className="w-3 h-3 mr-1 text-amber-600" />;
+    badgeColor = 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100';
   } else if (cit.startsWith('FILE:')) {
-    icon = <FileCode className="w-3 h-3 mr-1 text-emerald-400" />;
-    badgeColor = 'bg-emerald-950/60 text-emerald-300 border-emerald-800/80 hover:bg-emerald-900/80';
+    icon = <FileCode className="w-3 h-3 mr-1 text-emerald-600" />;
+    badgeColor = 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100';
   } else if (cit.startsWith('GRAPH:')) {
-    icon = <Database className="w-3 h-3 mr-1 text-purple-400" />;
-    badgeColor = 'bg-purple-950/60 text-purple-300 border-purple-800/80 hover:bg-purple-900/80';
+    icon = <Database className="w-3 h-3 mr-1 text-purple-600" />;
+    badgeColor = 'bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100';
   } else if (cit.startsWith('DIFF:') || cit.startsWith('REL:')) {
-    icon = <GitCommit className="w-3 h-3 mr-1 text-blue-400" />;
-    badgeColor = 'bg-blue-950/60 text-blue-300 border-blue-800/80 hover:bg-blue-900/80';
+    icon = <GitCommit className="w-3 h-3 mr-1 text-blue-600" />;
+    badgeColor = 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100';
   }
 
   return (
@@ -36,7 +36,7 @@ export const CitationChip: React.FC<CitationChipProps> = ({ citation, onClick, c
       type="button"
       onClick={() => onClick?.(cit)}
       className={cn(
-        'inline-flex items-center px-2 py-0.5 rounded text-xs font-mono border transition-all cursor-pointer select-none shadow-sm',
+        'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border transition-all cursor-pointer select-none shadow-2xs',
         badgeColor,
         className
       )}

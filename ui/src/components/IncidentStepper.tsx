@@ -6,10 +6,8 @@ import {
   Database,
   ShieldCheck,
   Download,
-  Play,
   CheckCircle2,
-  ChevronRight,
-  HelpCircle
+  ChevronRight
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -37,14 +35,14 @@ export const IncidentStepper: React.FC<IncidentStepperProps> = ({
       id: 'telemetry',
       number: '01',
       title: 'Telemetry Alert',
-      subtitle: isDegraded ? 'Latency Surge (p95 > 5s)' : 'Healthy Gateway Traffic',
+      subtitle: isDegraded ? 'Latency Surge (p95 > 5s)' : 'Healthy Gateway',
       icon: Activity,
     },
     {
       id: 'scans',
       number: '02',
       title: 'Scans & CVEs',
-      subtitle: 'SAST / SCA / DAST across versions',
+      subtitle: 'SAST / SCA / DAST catalog',
       icon: ShieldAlert,
     },
     {
@@ -58,7 +56,7 @@ export const IncidentStepper: React.FC<IncidentStepperProps> = ({
       id: 'blast_radius',
       number: '04',
       title: 'Blast Radius',
-      subtitle: 'Neo4j Graph & Data Reach',
+      subtitle: 'Neo4j Graph & Reach',
       icon: Database,
     },
     {
@@ -71,11 +69,11 @@ export const IncidentStepper: React.FC<IncidentStepperProps> = ({
   ];
 
   return (
-    <div className="bg-[#0B0F19] border-b border-[#334155] px-6 py-2.5 flex items-center justify-between select-none">
+    <div className="bg-white border-b border-slate-200 px-6 py-2 flex items-center justify-between select-none shadow-xs">
       {/* Stepper Chain */}
       <div className="flex items-center space-x-2 overflow-x-auto">
-        <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center">
-          Incident Lifecycle:
+        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center">
+          Workflow:
         </span>
 
         {steps.map((step, idx) => {
@@ -89,40 +87,40 @@ export const IncidentStepper: React.FC<IncidentStepperProps> = ({
                 type="button"
                 onClick={() => onSelectStep(step.id)}
                 className={cn(
-                  'flex items-center space-x-2.5 px-3 py-1.5 rounded-lg border transition-all duration-200 text-left cursor-pointer shadow-sm',
+                  'flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition-all duration-150 text-left cursor-pointer',
                   isActive
-                    ? 'bg-[#1E293B] border-blue-500 text-white shadow-blue-900/20'
+                    ? 'bg-blue-50 border-blue-300 text-blue-900 shadow-xs'
                     : isDone
-                    ? 'bg-[#111827] border-emerald-900/70 text-slate-200 hover:border-emerald-700'
-                    : 'bg-[#111827] border-[#334155] text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                    ? 'bg-emerald-50 border-emerald-200 text-slate-800 hover:bg-emerald-100/60'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 )}
               >
                 <div
                   className={cn(
-                    'w-6 h-6 rounded-md flex items-center justify-center font-mono text-xs font-bold shrink-0',
+                    'w-5 h-5 rounded-md flex items-center justify-center font-mono text-[11px] font-bold shrink-0',
                     isActive
                       ? 'bg-blue-600 text-white'
                       : isDone
-                      ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                      : 'bg-slate-800 text-slate-400'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-100 text-slate-500'
                   )}
                 >
-                  {isDone && !isActive ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Icon className="w-3.5 h-3.5" />}
+                  {isDone && !isActive ? <CheckCircle2 className="w-3 h-3 text-white" /> : <Icon className="w-3 h-3" />}
                 </div>
 
                 <div className="leading-tight">
                   <div className="text-xs font-bold flex items-center space-x-1.5">
                     <span>{step.title}</span>
-                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />}
+                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate max-w-[130px]">
+                  <div className="text-[10px] text-slate-500 truncate max-w-[120px]">
                     {step.subtitle}
                   </div>
                 </div>
               </button>
 
               {idx < steps.length - 1 && (
-                <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
               )}
             </React.Fragment>
           );
@@ -130,15 +128,15 @@ export const IncidentStepper: React.FC<IncidentStepperProps> = ({
       </div>
 
       {/* Export Report Action */}
-      <div className="flex items-center space-x-2 pl-4 border-l border-[#334155]">
+      <div className="flex items-center space-x-2 pl-4 border-l border-slate-200">
         <button
           type="button"
           onClick={onExportReport}
-          className="px-3 py-1.5 rounded-lg border border-purple-800 bg-purple-950/80 hover:bg-purple-900 text-purple-200 text-xs font-semibold flex items-center space-x-1.5 transition shadow-lg"
+          className="px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold flex items-center space-x-1.5 transition shadow-xs cursor-pointer"
           title="Download complete Incident RCA & CVE Audit Report"
         >
-          <Download className="w-3.5 h-3.5 text-purple-400" />
-          <span>Export RCA & CVE Report</span>
+          <Download className="w-3.5 h-3.5 text-purple-600" />
+          <span>Export Audit Report</span>
         </button>
       </div>
     </div>
