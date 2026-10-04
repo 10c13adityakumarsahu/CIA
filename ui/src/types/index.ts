@@ -137,14 +137,22 @@ export interface GatewayState {
 }
 
 export interface RouteMetrics {
+  route?: string;
+  version?: string;
+  count?: number;
+  errors?: number;
   p50_ms: number;
+  p90_ms?: number;
   p95_ms: number;
+  p99_ms?: number;
   err_rate: number;
   rps: number;
   history?: Array<{
     ts: number;
     p50: number;
+    p90?: number;
     p95: number;
+    p99?: number;
     err_rate: number;
     rps: number;
     marker?: string;

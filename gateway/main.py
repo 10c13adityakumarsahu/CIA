@@ -212,7 +212,9 @@ def get_rolling_metrics() -> Dict[str, Any]:
         n = len(latencies)
         errors = sum(1 for status, _ in items if status >= 500)
         p50 = latencies[int(n * 0.50)] if n else 0.0
+        p90 = latencies[int(n * 0.90)] if n else (latencies[-1] if n else 0.0)
         p95 = latencies[int(n * 0.95)] if n else (latencies[-1] if n else 0.0)
+        p99 = latencies[int(n * 0.99)] if n else (latencies[-1] if n else 0.0)
         err_rate = (errors / n) if n else 0.0
         rps = round(n / duration, 2)
 
@@ -224,7 +226,9 @@ def get_rolling_metrics() -> Dict[str, Any]:
             "errors": errors,
             "err_rate": round(err_rate, 4),
             "p50_ms": round(p50, 2),
+            "p90_ms": round(p90, 2),
             "p95_ms": round(p95, 2),
+            "p99_ms": round(p99, 2),
             "rps": rps,
         }
 

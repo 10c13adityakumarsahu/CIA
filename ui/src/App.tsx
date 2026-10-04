@@ -20,6 +20,7 @@ import {
 import { Header } from './components/Header';
 import { AppSidebar, MainViewTab } from './components/AppSidebar';
 import { MetricsChart } from './components/MetricsChart';
+import { ApiMetricsTable } from './components/ApiMetricsTable';
 import { FindingsRail } from './components/FindingsRail';
 import { InvestigationFeed } from './components/InvestigationFeed';
 import { AttackPathGraph } from './components/AttackPathGraph';
@@ -246,6 +247,12 @@ export function App() {
                 />
               </div>
 
+              {/* Multi-API Percentiles & Failure Status Table */}
+              <ApiMetricsTable
+                metrics={metrics}
+                onInvestigateRoute={() => handleInvestigate()}
+              />
+
               {/* Quick Incident Insights Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
@@ -333,6 +340,7 @@ export function App() {
               verification={verification}
               isInvestigating={isInvestigating}
               onSelectCitation={handleSelectCitation}
+              scenario={activeScenario}
             />
           )}
 
@@ -364,6 +372,7 @@ export function App() {
             <MitigationView
               mitigations={report?.mitigations || []}
               rejectedOptions={report?.rejected_options || []}
+              state={state}
               onSelectCitation={handleSelectCitation}
               onMitigationExecuted={handleMitigationExecuted}
             />

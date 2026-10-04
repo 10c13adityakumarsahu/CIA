@@ -1,6 +1,7 @@
 import React from 'react';
 import { Report, VerificationResult, ToolCallEvent, ToolResultEvent } from '../types';
 import { CitationChip } from './CitationChip';
+import { CulpritCodeSnippetCard } from './CulpritCodeSnippetCard';
 import {
   Terminal,
   CheckCircle2,
@@ -20,6 +21,7 @@ interface InvestigationFeedProps {
   verification: VerificationResult | null;
   isInvestigating: boolean;
   onSelectCitation: (citation: string) => void;
+  scenario?: string | null;
 }
 
 export const InvestigationFeed: React.FC<InvestigationFeedProps> = ({
@@ -27,10 +29,19 @@ export const InvestigationFeed: React.FC<InvestigationFeedProps> = ({
   report,
   verification,
   isInvestigating,
-  onSelectCitation
+  onSelectCitation,
+  scenario
 }) => {
+  const activeScenario = scenario || (report?.verdict === 'regression' ? 'b_regression' : 'a_exploit');
+
   return (
     <div className="h-full flex flex-col space-y-5 overflow-y-auto p-6 select-text">
+      {/* Offending Code Snippet & Gemma Suggested Fix */}
+      <CulpritCodeSnippetCard
+        scenario={activeScenario}
+        onSelectCitation={onSelectCitation}
+      />
+
       {/* Incident Summary Card if report exists */}
       {report && (
         <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">

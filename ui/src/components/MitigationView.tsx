@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Mitigation, RejectedOption, PreconditionCheck } from '../types';
+import { GatewayState, Mitigation, RejectedOption, PreconditionCheck } from '../types';
 import { CitationChip } from './CitationChip';
+import { RollbackControlCard } from './RollbackControlCard';
 import {
   ShieldCheck,
   AlertOctagon,
@@ -21,6 +22,7 @@ import { previewMitigation, executeMitigation, undoMitigation, subscribeMitigati
 interface MitigationViewProps {
   mitigations?: Mitigation[];
   rejectedOptions?: RejectedOption[];
+  state?: GatewayState | null;
   onSelectCitation: (citation: string) => void;
   onMitigationExecuted?: (action: string) => void;
 }
@@ -28,6 +30,7 @@ interface MitigationViewProps {
 export const MitigationView: React.FC<MitigationViewProps> = ({
   mitigations = [],
   rejectedOptions = [],
+  state = null,
   onSelectCitation,
   onMitigationExecuted
 }) => {
@@ -110,6 +113,12 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
 
   return (
     <div className="h-full flex flex-col space-y-5 overflow-y-auto p-6 select-text">
+      {/* 1-Click Verified Rollback Controller */}
+      <RollbackControlCard
+        state={state}
+        onMitigationExecuted={onMitigationExecuted}
+      />
+
       {/* Recovery Verification Live Status Banner */}
       {(verifyStatus.running || verifyStatus.verdict) && (
         <div className="bg-white border border-blue-300 rounded-xl p-5 shadow-sm space-y-3 animate-in fade-in">
