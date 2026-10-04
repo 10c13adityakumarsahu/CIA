@@ -284,3 +284,20 @@ async def verify_mitigation_recovery(action_id: str):
         yield format_sse("done", {"status": "verification_completed"})
 
     return StreamingResponse(recovery_stream(), media_type="text/event-stream")
+
+
+@app.get("/api/scenarios/explain")
+def get_all_scenarios_explain():
+    from simulate import SCENARIO_EXPLANATIONS
+    return SCENARIO_EXPLANATIONS
+
+
+@app.get("/api/explain/{scenario_key}")
+def get_scenario_explain(scenario_key: str):
+    from simulate import SCENARIO_EXPLANATIONS
+    key = "exploit" if "a" in scenario_key or scenario_key == "exploit" else "regression" if "b" in scenario_key or scenario_key == "regression" else scenario_key
+    info = SCENARIO_EXPLANATIONS.get(key)
+    if not info:
+        raise HTTPException(status_code=404, detail="Scenario explanation not found")
+    return info
+

@@ -25,12 +25,13 @@ import { InvestigationFeed } from './components/InvestigationFeed';
 import { AttackPathGraph } from './components/AttackPathGraph';
 import { BlastRadiusGraph } from './components/BlastRadiusGraph';
 import { MitigationView } from './components/MitigationView';
+import { PitchRcaView } from './components/PitchRcaView';
 import { CitationDrawer } from './components/CitationDrawer';
-import { Terminal, Shield, GitPullRequest, Activity, AlertCircle } from 'lucide-react';
+import { Terminal, Shield, GitPullRequest, Activity, AlertCircle, Sparkles } from 'lucide-react';
 import { cn } from './lib/utils';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'investigate' | 'attack_path' | 'blast_radius' | 'mitigation'>('investigate');
+  const [activeTab, setActiveTab] = useState<'investigate' | 'attack_path' | 'blast_radius' | 'mitigation' | 'pitch_rca'>('investigate');
   const [state, setState] = useState<GatewayState | null>(null);
   const [metrics, setMetrics] = useState<Record<string, RouteMetrics> | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
@@ -259,6 +260,20 @@ export function App() {
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping ml-1" />
                 )}
               </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('pitch_rca')}
+                className={cn(
+                  'h-full px-4 text-xs font-bold uppercase tracking-wider flex items-center space-x-2 border-b-2 transition select-none',
+                  activeTab === 'pitch_rca'
+                    ? 'border-amber-500 text-amber-300 bg-amber-950/20'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                )}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Pitch & RCA Deep-Dive</span>
+              </button>
             </div>
           </div>
 
@@ -294,6 +309,14 @@ export function App() {
                 rejectedOptions={report?.rejected_options || []}
                 onSelectCitation={handleSelectCitation}
                 onMitigationExecuted={handleMitigationExecuted}
+              />
+            )}
+
+            {activeTab === 'pitch_rca' && (
+              <PitchRcaView
+                activeScenario={activeScenario}
+                onSelectCitation={handleSelectCitation}
+                onTriggerScenario={handleSelectScenario}
               />
             )}
           </div>

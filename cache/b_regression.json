@@ -1,0 +1,1206 @@
+{
+  "scenario": "b_regression",
+  "events": [
+    {
+      "event": "tool_call",
+      "data": {
+        "tool": "log_stats",
+        "args": {}
+      }
+    },
+    {
+      "event": "tool_result",
+      "data": {
+        "tool": "log_stats",
+        "result": {
+          "total_requests": 12348,
+          "status_counts": {
+            "404": 2713,
+            "200": 5319,
+            "201": 4216,
+            "403": 7,
+            "500": 93
+          },
+          "error_count": 93,
+          "slow_requests": 71,
+          "top_routes": {
+            "/api/products": 5360,
+            "/api/orders": 4265,
+            "/api/payments/2": 569,
+            "/api/payments/1": 561,
+            "/api/payments/3": 545
+          }
+        }
+      }
+    },
+    {
+      "event": "tool_call",
+      "data": {
+        "tool": "search_logs",
+        "args": {
+          "limit": 20
+        }
+      }
+    },
+    {
+      "event": "tool_result",
+      "data": {
+        "tool": "search_logs",
+        "result": [
+          {
+            "id": "LOG-12348",
+            "ts": "2026-10-04T09:03:52.765718Z",
+            "request_id": "f1969534-0211-454a-8833-267a23bdf816",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 5.13,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": "{\"customer_id\": 4, \"sku\": \"TOOL-002\", \"qty\": 2}"
+          },
+          {
+            "id": "LOG-12347",
+            "ts": "2026-10-04T09:03:52.556394Z",
+            "request_id": "cdc35538-e1cd-4bf3-904d-618aebc64acc",
+            "route": "/api/products",
+            "method": "GET",
+            "status": 200,
+            "latency_ms": 2.7,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": ""
+          },
+          {
+            "id": "LOG-12346",
+            "ts": "2026-10-04T09:03:52.350528Z",
+            "request_id": "e2b2c849-0abc-4824-98a5-33c9dfa8a299",
+            "route": "/api/products",
+            "method": "GET",
+            "status": 200,
+            "latency_ms": 2.95,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": ""
+          },
+          {
+            "id": "LOG-12345",
+            "ts": "2026-10-04T09:03:52.144128Z",
+            "request_id": "186397c9-d2e1-4cfe-bd9b-9e44ba7ce226",
+            "route": "/api/products",
+            "method": "GET",
+            "status": 200,
+            "latency_ms": 3.78,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": ""
+          },
+          {
+            "id": "LOG-12344",
+            "ts": "2026-10-04T09:03:51.936807Z",
+            "request_id": "6d03e0f8-7202-42d7-9d10-fa56fa6cd371",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 5.39,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": "{\"customer_id\": 1, \"sku\": \"GADGET-002\", \"qty\": 3}"
+          },
+          {
+            "id": "LOG-12343",
+            "ts": "2026-10-04T09:03:51.726699Z",
+            "request_id": "18a56bad-f8da-42d9-a7a8-a730cf96dc50",
+            "route": "/api/products",
+            "method": "GET",
+            "status": 200,
+            "latency_ms": 3.25,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": ""
+          },
+          {
+            "id": "LOG-12342",
+            "ts": "2026-10-04T09:03:51.519690Z",
+            "request_id": "8633edd2-ced9-4c17-8a4d-b6863a7f1446",
+            "route": "/api/products",
+            "method": "GET",
+            "status": 200,
+            "latency_ms": 3.09,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": ""
+          },
+          {
+            "id": "LOG-12341",
+            "ts": "2026-10-04T09:03:51.312997Z",
+            "request_id": "6b72ce79-aadf-40c6-9610-95705ff23e73",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 5.9,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": "{\"customer_id\": 2, \"sku\": \"TOOL-001\", \"qty\": 3}"
+          },
+          {
+            "id": "LOG-12340",
+            "ts": "2026-10-04T09:03:51.103409Z",
+            "request_id": "9b587921-57f0-46e4-b26b-7a61e26baa19",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 5.4,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": "{\"customer_id\": 3, \"sku\": \"TOOL-002\", \"qty\": 3}"
+          },
+          {
+            "id": "LOG-12339",
+            "ts": "2026-10-04T09:03:50.894132Z",
+            "request_id": "14b627ed-0d11-4b99-a319-b3bd31d9c1e0",
+            "route": "/api/payments/3",
+            "method": "GET",
+            "status": 404,
+            "latency_ms": 3.55,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": ""
+          },
+          {
+            "id": "LOG-12338",
+            "ts": "2026-10-04T09:03:50.687429Z",
+            "request_id": "ce03791a-85a8-4bc0-b174-25bcef331250",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 6.18,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.9",
+            "body_excerpt": "{\"customer_id\": 4, \"sku\": \"GADGET-002\", \"qty\": 3}"
+          },
+          {
+            "id": "LOG-12337",
+            "ts": "2026-10-04T09:03:50.611347Z",
+            "request_id": "632c282d-59a0-4ec4-ab96-cc60c1ede92c",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 17.61,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.1",
+            "body_excerpt": "{\"customer_id\": 1, \"sku\": \"WIDGET-001\", \"qty\": 1, \"items\": [{\"sku\": \"WIDGET-001\", \"qty\": 1}, {\"sku\":..."
+          },
+          {
+            "id": "LOG-12336",
+            "ts": "2026-10-04T09:03:50.604029Z",
+            "request_id": "3077d0cd-903e-469c-a09b-ed58b1b064c1",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 11.4,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.1",
+            "body_excerpt": "{\"customer_id\": 1, \"sku\": \"WIDGET-001\", \"qty\": 1, \"items\": [{\"sku\": \"WIDGET-001\", \"qty\": 1}, {\"sku\":..."
+          },
+          {
+            "id": "LOG-12335",
+            "ts": "2026-10-04T09:03:50.590596Z",
+            "request_id": "71783bf7-ffdc-4177-8f34-ac90a6a9cca4",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 26.9,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.1",
+            "body_excerpt": "{\"customer_id\": 1, \"sku\": \"WIDGET-001\", \"qty\": 1, \"items\": [{\"sku\": \"WIDGET-001\", \"qty\": 1}, {\"sku\":..."
+          },
+          {
+            "id": "LOG-12334",
+            "ts": "2026-10-04T09:03:50.586763Z",
+            "request_id": "427fbacc-4c00-47e7-a5d5-d9a6258e3366",
+            "route": "/api/products",
+            "method": "GET",
+            "status": 200,
+            "latency_ms": 29.25,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.1",
+            "body_excerpt": ""
+          },
+          {
+            "id": "LOG-12333",
+            "ts": "2026-10-04T09:03:50.584199Z",
+            "request_id": "3cf95f41-55e9-42b7-85d7-0cf0577db807",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 30.61,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.1",
+            "body_excerpt": "{\"customer_id\": 1, \"sku\": \"WIDGET-001\", \"qty\": 1, \"items\": [{\"sku\": \"WIDGET-001\", \"qty\": 1}, {\"sku\":..."
+          },
+          {
+            "id": "LOG-12332",
+            "ts": "2026-10-04T09:03:50.579213Z",
+            "request_id": "537150a6-f2bf-4a1c-9609-2af8dd8031ba",
+            "route": "/api/products",
+            "method": "GET",
+            "status": 200,
+            "latency_ms": 29.12,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.1",
+            "body_excerpt": ""
+          },
+          {
+            "id": "LOG-12331",
+            "ts": "2026-10-04T09:03:50.576398Z",
+            "request_id": "59533f37-a6d9-4a19-a45e-cf9641d97268",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 41.18,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.1",
+            "body_excerpt": "{\"customer_id\": 1, \"sku\": \"WIDGET-001\", \"qty\": 1, \"items\": [{\"sku\": \"WIDGET-001\", \"qty\": 1}, {\"sku\":..."
+          },
+          {
+            "id": "LOG-12330",
+            "ts": "2026-10-04T09:03:50.550663Z",
+            "request_id": "87d52557-6dcf-41d4-bb70-a0df573da6d1",
+            "route": "/api/orders",
+            "method": "POST",
+            "status": 201,
+            "latency_ms": 22.99,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.1",
+            "body_excerpt": "{\"customer_id\": 1, \"sku\": \"WIDGET-001\", \"qty\": 1, \"items\": [{\"sku\": \"WIDGET-001\", \"qty\": 1}, {\"sku\":..."
+          },
+          {
+            "id": "LOG-12329",
+            "ts": "2026-10-04T09:03:50.545808Z",
+            "request_id": "b537d9d0-4e37-4465-bbb8-9f564d948d55",
+            "route": "/api/products",
+            "method": "GET",
+            "status": 200,
+            "latency_ms": 11.08,
+            "upstream": "blue",
+            "version": "1.5.0",
+            "client_ip": "172.23.0.1",
+            "body_excerpt": ""
+          }
+        ]
+      }
+    },
+    {
+      "event": "tool_call",
+      "data": {
+        "tool": "list_findings",
+        "args": {}
+      }
+    },
+    {
+      "event": "tool_result",
+      "data": {
+        "tool": "list_findings",
+        "result": [
+          {
+            "id": "SAST-001",
+            "source": "sast",
+            "title": "Subprocess executed with shell=True",
+            "severity": "high",
+            "location": "target_app/v1.5.0/legacy_helper.py:16",
+            "cwe": [
+              "CWE-78"
+            ],
+            "owasp": "A03:2021-Injection",
+            "detail": "Subprocess executed with shell=True",
+            "fingerprint": "28344cc156138103477d9fc15747983bae935e25",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SAST-002",
+            "source": "sast",
+            "title": "SQL query constructed with f-string interpolation passed to cursor.execute()",
+            "severity": "high",
+            "location": "target_app/v1.5.0/main.py:81",
+            "cwe": [
+              "CWE-89"
+            ],
+            "owasp": "A03:2021-Injection",
+            "detail": "SQL query constructed with f-string interpolation passed to cursor.execute()",
+            "fingerprint": "d7c9fc992776c5135cee6b9c1eb40634e31142af",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SAST-003",
+            "source": "sast",
+            "title": "Use of weak cryptographic hash algorithm (MD5 or SHA1)",
+            "severity": "medium",
+            "location": "target_app/v1.5.0/legacy_helper.py:11",
+            "cwe": [
+              "CWE-328"
+            ],
+            "owasp": "A02:2021-Cryptographic Failures",
+            "detail": "Use of weak cryptographic hash algorithm (MD5 or SHA1)",
+            "fingerprint": "2c972b64a8ecf1fd75a74136c2556ba0552b6e82",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-001",
+            "source": "sca",
+            "title": "PyYAML 5.3.1: PyYAML: incomplete fix for CVE-2020-1747",
+            "severity": "critical",
+            "location": "target_app/requirements.txt:PyYAML==5.3.1",
+            "cwe": [
+              "CWE-20"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vulnerable to this flaw. This flaw allows an attacker to execute arbitrary code on the system by abusing the python/object/new constructor. This flaw is due to an incomplete fix for CVE-2020-1747.",
+            "fingerprint": "1f58f5fa8409224c9a94f28601469d1a13da8c00",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-002",
+            "source": "sca",
+            "title": "requests 2.19.1: python-requests: Redirect from HTTPS to HTTP does not remove Authorization header",
+            "severity": "high",
+            "location": "target_app/requirements.txt:requests==2.19.1",
+            "cwe": [
+              "CWE-522"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "The Requests package before 2.20.0 for Python sends an HTTP Authorization header to an http URI upon receiving a same-hostname https-to-http redirect, which makes it easier for remote attackers to discover credentials by sniffing the network.",
+            "fingerprint": "dff618209054cc2e5618c9dbe613a5f5afd7357a",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-003",
+            "source": "sca",
+            "title": "Jinja2 2.11.2: python-jinja2: ReDoS vulnerability in the urlize filter",
+            "severity": "medium",
+            "location": "target_app/requirements.txt:Jinja2==2.11.2",
+            "cwe": [
+              "CWE-400"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "This affects the package jinja2 from 0.0.0 and before 2.11.3. The ReDoS vulnerability is mainly due to the `_punctuation_re regex` operator and its use of multiple wildcards. The last wildcard is the most exploitable as it searches for trailing punctuation. This issue can be mitigated by Markdown to format user content instead of the urlize filter, or by implementing request timeouts and limiting process memory.",
+            "fingerprint": "f453a9530c6515537b5b8dc26ac71408f97a9aeb",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-004",
+            "source": "sca",
+            "title": "Jinja2 2.11.2: jinja2: HTML attribute injection when passing user input as keys to xmlattr filter",
+            "severity": "medium",
+            "location": "target_app/requirements.txt:Jinja2==2.11.2",
+            "cwe": [
+              "CWE-79"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "Jinja is an extensible templating engine. Special placeholders in the template allow writing code similar to Python syntax. It is possible to inject arbitrary HTML attributes into the rendered HTML template, potentially leading to Cross-Site Scripting (XSS). The Jinja `xmlattr` filter can be abused to inject arbitrary HTML attribute keys and values, bypassing the auto escaping mechanism and potentially leading to XSS. It may also be possible to bypass attribute validation checks if they are blacklist-based.",
+            "fingerprint": "6df34b145cae98f6cbfc876a0d7534804f418a96",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-005",
+            "source": "sca",
+            "title": "Jinja2 2.11.2: jinja2: accepts keys containing non-attribute characters",
+            "severity": "medium",
+            "location": "target_app/requirements.txt:Jinja2==2.11.2",
+            "cwe": [
+              "CWE-79"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "Jinja is an extensible templating engine. The `xmlattr` filter in affected versions of Jinja accepts keys containing non-attribute characters. XML/HTML attributes cannot contain spaces, `/`, `>`, or `=`, as each would then be interpreted as starting a separate attribute. If an application accepts keys (as opposed to only values) as user input, and renders these in pages that other users see as well, an attacker could use this to inject other attributes and perform XSS. The fix for CVE-2024-22195 only addressed spaces but not other characters. Accepting keys as user input is now explicitly considered an unintended use case of the `xmlattr` filter, and code that does so without otherwise validating the input should be flagged as insecure, regardless of Jinja version. Accepting _values_ as user input continues to be safe. This vulnerability is fixed in 3.1.4.",
+            "fingerprint": "a571e6e5de80cb3d9113a6cca877867aa933cfba",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-006",
+            "source": "sca",
+            "title": "Jinja2 2.11.2: jinja2: Jinja has a sandbox breakout through indirect reference to format method",
+            "severity": "medium",
+            "location": "target_app/requirements.txt:Jinja2==2.11.2",
+            "cwe": [
+              "CWE-693",
+              "CWE-1336"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "Jinja is an extensible templating engine. Prior to 3.1.5, An oversight in how the Jinja sandboxed environment detects calls to str.format allows an attacker that controls the content of a template to execute arbitrary Python code. To exploit the vulnerability, an attacker needs to control the content of a template. Whether that is the case depends on the type of application using Jinja. This vulnerability impacts users of applications which execute untrusted templates. Jinja's sandbox does catch calls to str.format and ensures they don't escape the sandbox. However, it's possible to store a reference to a malicious string's format method, then pass that to a filter that calls it. No such filters are built-in to Jinja, but could be present through custom filters in an application. After the fix, such indirect calls are also handled by the sandbox. This vulnerability is fixed in 3.1.5.",
+            "fingerprint": "fc281ee4121d8955c55a542ba1892cd73eb27c96",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-007",
+            "source": "sca",
+            "title": "Jinja2 2.11.2: jinja2: Jinja sandbox breakout through attr filter selecting format method",
+            "severity": "medium",
+            "location": "target_app/requirements.txt:Jinja2==2.11.2",
+            "cwe": [
+              "CWE-1336"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "Jinja is an extensible templating engine. Prior to 3.1.6, an oversight in how the Jinja sandboxed environment interacts with the |attr filter allows an attacker that controls the content of a template to execute arbitrary Python code. To exploit the vulnerability, an attacker needs to control the content of a template. Whether that is the case depends on the type of application using Jinja. This vulnerability impacts users of applications which execute untrusted templates. Jinja's sandbox does catch calls to str.format and ensures they don't escape the sandbox. However, it's possible to use the |attr filter to get a reference to a string's plain format method, bypassing the sandbox. After the fix, the |attr filter no longer bypasses the environment's attribute lookup. This vulnerability is fixed in 3.1.6.",
+            "fingerprint": "2edc7ba3db58746d12c7a50f55753af2adbe7829",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-008",
+            "source": "sca",
+            "title": "requests 2.19.1: python-requests: Unintended leak of Proxy-Authorization header",
+            "severity": "medium",
+            "location": "target_app/requirements.txt:requests==2.19.1",
+            "cwe": [
+              "CWE-200"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "Requests is a HTTP library. Since Requests 2.3.0, Requests has been leaking Proxy-Authorization headers to destination servers when redirected to an HTTPS endpoint. This is a product of how we use `rebuild_proxies` to reattach the `Proxy-Authorization` header to requests. For HTTP connections sent through the tunnel, the proxy will identify the header in the request itself and remove it prior to forwarding to the destination server. However when sent over HTTPS, the `Proxy-Authorization` header must be sent in the CONNECT request as the proxy has no visibility into the tunneled request. This results in Requests forwarding proxy credentials to the destination server unintentionally, allowing a malicious actor to potentially exfiltrate sensitive information. This issue has been patched in version 2.31.0.",
+            "fingerprint": "443311282700c5f404eb41682cac51a0db87ce4e",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-009",
+            "source": "sca",
+            "title": "requests 2.19.1: requests: subsequent requests to the same host ignore cert verification",
+            "severity": "medium",
+            "location": "target_app/requirements.txt:requests==2.19.1",
+            "cwe": [
+              "CWE-670"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "Requests is a HTTP library. Prior to 2.32.0, when making requests through a Requests `Session`, if the first request is made with `verify=False` to disable cert verification, all subsequent requests to the same host will continue to ignore cert verification regardless of changes to the value of `verify`. This behavior will continue for the lifecycle of the connection in the connection pool. This vulnerability is fixed in 2.32.0.",
+            "fingerprint": "2d91efe203add14ff22a6f8ee95e1b2d5a3135d4",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-010",
+            "source": "sca",
+            "title": "requests 2.19.1: requests: Requests vulnerable to .netrc credentials leak via malicious URLs",
+            "severity": "medium",
+            "location": "target_app/requirements.txt:requests==2.19.1",
+            "cwe": [
+              "CWE-522"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "Requests is a HTTP library. Due to a URL parsing issue, Requests releases prior to 2.32.4 may leak .netrc credentials to third parties for specific maliciously-crafted URLs. Users should upgrade to version 2.32.4 to receive a fix. For older versions of Requests, use of the .netrc file can be disabled with `trust_env=False` on one's Requests Session.",
+            "fingerprint": "07a25ef9ab9a99a70eaea3f1e46220b1c33d6bd3",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "SCA-011",
+            "source": "sca",
+            "title": "requests 2.19.1: requests: Requests: Security bypass due to predictable temporary file creation",
+            "severity": "medium",
+            "location": "target_app/requirements.txt:requests==2.19.1",
+            "cwe": [
+              "CWE-377"
+            ],
+            "owasp": "A06:2021-Vulnerable and Outdated Components",
+            "detail": "Requests is a HTTP library. Prior to version 2.33.0, the `requests.utils.extract_zipped_paths()` utility function uses a predictable filename when extracting files from zip archives into the system temporary directory. If the target file already exists, it is reused without validation. A local attacker with write access to the temp directory could pre-create a malicious file that would be loaded in place of the legitimate one. Standard usage of the Requests library is not affected by this vulnerability. Only applications that call `extract_zipped_paths()` directly are impacted. Starting in version 2.33.0, the library extracts files to a non-deterministic location. If developers are unable to upgrade, they can set `TMPDIR` in their environment to a directory with restricted write access.",
+            "fingerprint": "3328dc2451263f76615e04a54f6a1f30d58d83c0",
+            "present_in": [
+              "1.3.0",
+              "1.4.0",
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "DAST-001",
+            "source": "dast",
+            "title": "SQL Injection",
+            "severity": "high",
+            "location": "POST /api/orders",
+            "cwe": [
+              "CWE-89"
+            ],
+            "owasp": "A03:2021-Injection",
+            "detail": "<p>SQL injection may be possible.</p>",
+            "fingerprint": "84d6bf54b86931e550d818353ffc262d489965dc",
+            "present_in": [
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "DAST-002",
+            "source": "dast",
+            "title": "A Server Error response code was returned by the server",
+            "severity": "low",
+            "location": "POST /api/orders",
+            "cwe": [
+              "CWE-388"
+            ],
+            "owasp": "A03:2021-Injection",
+            "detail": "<p>A response code of 500 was returned by the server.</p><p>This may indicate that the application is failing to handle unexpected input correctly.</p><p>Raised by the 'Alert on HTTP Response Code Error' script</p>",
+            "fingerprint": "3ea86eed389303edab8157f49ce70641f91831b4",
+            "present_in": [
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "DAST-003",
+            "source": "dast",
+            "title": "Cross-Origin-Resource-Policy Header Missing or Invalid",
+            "severity": "low",
+            "location": "GET /api/products",
+            "cwe": [
+              "CWE-693"
+            ],
+            "owasp": "A05:2021-Security Misconfiguration",
+            "detail": "<p>Cross-Origin-Resource-Policy header is an opt-in header designed to counter side-channels attacks like Spectre. Resource should be specifically set as shareable amongst different origins.</p>",
+            "fingerprint": "28330025194e9d21dcbb36ee14a876bfc86bf84a",
+            "present_in": [
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "DAST-004",
+            "source": "dast",
+            "title": "X-Content-Type-Options Header Missing",
+            "severity": "low",
+            "location": "GET /api/products",
+            "cwe": [
+              "CWE-693"
+            ],
+            "owasp": "A05:2021-Security Misconfiguration",
+            "detail": "<p>The Anti-MIME-Sniffing header X-Content-Type-Options was not set to 'nosniff'. This allows older versions of Internet Explorer and Chrome to perform MIME-sniffing on the response body, potentially causing the response body to be interpreted and displayed as a content type other than the declared content type. Current (early 2014) and legacy versions of Firefox will use the declared content type (if one is set), rather than performing MIME-sniffing.</p>",
+            "fingerprint": "9ebbaf5389e374d3469383a019dc1e86450d0719",
+            "present_in": [
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "DAST-005",
+            "source": "dast",
+            "title": "A Client Error response code was returned by the server",
+            "severity": "info",
+            "location": "GET http://blue:8000",
+            "cwe": [
+              "CWE-388"
+            ],
+            "owasp": "A03:2021-Injection",
+            "detail": "<p>A response code of 404 was returned by the server.</p><p>This may indicate that the application is failing to handle unexpected input correctly.</p><p>Raised by the 'Alert on HTTP Response Code Error' script</p>",
+            "fingerprint": "ba20595e2715069b19a860143c85d9416da88782",
+            "present_in": [
+              "1.5.0"
+            ]
+          },
+          {
+            "id": "DAST-006",
+            "source": "dast",
+            "title": "Storable and Cacheable Content",
+            "severity": "info",
+            "location": "GET /api/payments/10",
+            "cwe": [
+              "CWE-524"
+            ],
+            "owasp": "A03:2021-Injection",
+            "detail": "<p>The response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where \"shared\" caching servers such as \"proxy\" caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.</p>",
+            "fingerprint": "05af4327c9516a97be61541288fe4088700e18e2",
+            "present_in": [
+              "1.5.0"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "event": "tool_call",
+      "data": {
+        "tool": "read_file",
+        "args": {
+          "path": "target_app/v1.5.0/main.py",
+          "start": 70,
+          "end": 115
+        }
+      }
+    },
+    {
+      "event": "tool_result",
+      "data": {
+        "tool": "read_file",
+        "result": "70:                 for r in rows]\n71:     finally:\n72:         put_conn(conn)\n73: \n74: \n75: @app.post(\"/api/orders\", status_code=201)\n76: def create_order(order: OrderIn):\n77:     conn = get_conn()\n78:     try:\n79:         with conn.cursor() as cur:\n80:             # VULNERABILITY 1: SQLi \u2013 sku interpolated directly via f-string\n81:             query = f\"SELECT id, price FROM products WHERE sku = '{order.sku}'\"  # noqa: S608\n82:             cur.execute(query)\n83:             product = cur.fetchone()\n84:             if not product:\n85:                 raise HTTPException(status_code=404, detail=\"Product not found\")\n86:             _product_id, price = product\n87:             total = float(price) * order.qty\n88: \n89:             # VULNERABILITY 2 + 3: N+1 \u2013 separate inventory query per item,\n90:             # inventory.sku has NO index \u2192 full table scan each time\n91:             all_items = [OrderItem(sku=order.sku, qty=order.qty)] + (order.items or [])\n92:             inventory_info = []\n93:             for item in all_items:\n94:                 # Each iteration fires a separate unindexed query\n95:                 cur.execute(\n96:                     \"SELECT qty FROM inventory WHERE sku = %s AND warehouse = 'main'\",\n97:                     (item.sku,),\n98:                 )\n99:                 inv = cur.fetchone()\n100:                 inventory_info.append({\n101:                     \"sku\": item.sku,\n102:                     \"available\": inv[0] if inv else 0,\n103:                     \"requested\": item.qty,\n104:                 })\n105: \n106:             cur.execute(\n107:                 \"INSERT INTO orders (customer_id, sku, qty, total, status) \"\n108:                 \"VALUES (%s, %s, %s, %s, 'pending') RETURNING id\",\n109:                 (order.customer_id, order.sku, order.qty, total),\n110:             )\n111:             order_id = cur.fetchone()[0]\n112:             conn.commit()\n113: \n114:         return {\n115:             \"order_id\": order_id,"
+      }
+    },
+    {
+      "event": "tool_call",
+      "data": {
+        "tool": "blast_radius",
+        "args": {
+          "finding_id": "SAST-002"
+        }
+      }
+    },
+    {
+      "event": "tool_result",
+      "data": {
+        "tool": "blast_radius",
+        "result": {
+          "nodes": [
+            {
+              "id": "finding:SAST-002",
+              "label": "Finding",
+              "props": {
+                "severity": "high",
+                "finding_id": "SAST-002",
+                "fp": "d7c9fc992776c5135cee6b9c1eb40634e31142af",
+                "id": "finding:SAST-002",
+                "source": "sast",
+                "title": "SQL query constructed with f-string interpolation passed to cursor.execute()"
+              }
+            },
+            {
+              "id": "fn:create_order",
+              "label": "Function",
+              "props": {
+                "file": "target_app/v1.5.0/main.py",
+                "line": 76,
+                "name": "create_order",
+                "id": "fn:create_order"
+              }
+            },
+            {
+              "id": "route:/api/orders",
+              "label": "Route",
+              "props": {
+                "path": "/api/orders",
+                "id": "route:/api/orders"
+              }
+            },
+            {
+              "id": "table:orders",
+              "label": "Table",
+              "props": {
+                "name": "orders",
+                "sensitivity": "none",
+                "id": "table:orders"
+              }
+            },
+            {
+              "id": "dbrole:app_rw",
+              "label": "DBRole",
+              "props": {
+                "name": "app_rw",
+                "id": "dbrole:app_rw"
+              }
+            },
+            {
+              "id": "table:schema_version",
+              "label": "Table",
+              "props": {
+                "name": "schema_version",
+                "id": "table:schema_version",
+                "sensitivity": "none"
+              }
+            },
+            {
+              "id": "table:inventory",
+              "label": "Table",
+              "props": {
+                "name": "inventory",
+                "sensitivity": "none",
+                "id": "table:inventory"
+              }
+            },
+            {
+              "id": "table:products",
+              "label": "Table",
+              "props": {
+                "name": "products",
+                "sensitivity": "none",
+                "id": "table:products"
+              }
+            },
+            {
+              "id": "table:payments",
+              "label": "Table",
+              "props": {
+                "name": "payments",
+                "sensitivity": "financial",
+                "id": "table:payments"
+              }
+            },
+            {
+              "id": "table:customers",
+              "label": "Table",
+              "props": {
+                "name": "customers",
+                "sensitivity": "pii",
+                "id": "table:customers"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "from": "finding:SAST-002",
+              "to": "fn:create_order",
+              "type": "LOCATED_IN"
+            },
+            {
+              "from": "route:/api/orders",
+              "to": "fn:create_order",
+              "type": "HANDLED_BY"
+            },
+            {
+              "from": "fn:create_order",
+              "to": "table:orders",
+              "type": "WRITES"
+            },
+            {
+              "from": "dbrole:app_rw",
+              "to": "table:schema_version",
+              "type": "CAN_READ"
+            },
+            {
+              "from": "dbrole:app_rw",
+              "to": "table:inventory",
+              "type": "CAN_READ"
+            },
+            {
+              "from": "dbrole:app_rw",
+              "to": "table:orders",
+              "type": "CAN_READ"
+            },
+            {
+              "from": "dbrole:app_rw",
+              "to": "table:products",
+              "type": "CAN_READ"
+            },
+            {
+              "from": "dbrole:app_rw",
+              "to": "table:payments",
+              "type": "CAN_READ"
+            },
+            {
+              "from": "dbrole:app_rw",
+              "to": "table:customers",
+              "type": "CAN_READ"
+            },
+            {
+              "from": "fn:create_order",
+              "to": "table:inventory",
+              "type": "READS"
+            },
+            {
+              "from": "fn:create_order",
+              "to": "table:products",
+              "type": "READS"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "event": "tool_call",
+      "data": {
+        "tool": "find_last_stable",
+        "args": {
+          "exclude_finding_ids": [
+            "SAST-002"
+          ]
+        }
+      }
+    },
+    {
+      "event": "tool_result",
+      "data": {
+        "tool": "find_last_stable",
+        "result": "1.4.0"
+      }
+    },
+    {
+      "event": "tool_call",
+      "data": {
+        "tool": "check_version_findings",
+        "args": {
+          "version": "1.4.0",
+          "finding_ids": [
+            "SAST-002"
+          ]
+        }
+      }
+    },
+    {
+      "event": "tool_result",
+      "data": {
+        "tool": "check_version_findings",
+        "result": {
+          "nodes": [
+            {
+              "id": "version:1.4.0",
+              "label": "Version",
+              "props": {
+                "ver": "1.4.0",
+                "id": "version:1.4.0",
+                "status": "stable"
+              }
+            },
+            {
+              "id": "finding:SAST-002",
+              "label": "Finding",
+              "props": {
+                "severity": "high",
+                "finding_id": "SAST-002",
+                "fp": "d7c9fc992776c5135cee6b9c1eb40634e31142af",
+                "id": "finding:SAST-002",
+                "source": "sast",
+                "title": "SQL query constructed with f-string interpolation passed to cursor.execute()"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "from": "version:1.4.0",
+              "to": "finding:SAST-002",
+              "type": "CONTAINS"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "event": "report",
+      "data": {
+        "incident_summary": "Performance regression detected: N+1 inventory queries in v1.5.0 exhausting database connection pool.",
+        "hypotheses": [
+          {
+            "label": "regression",
+            "confidence": "high",
+            "supporting": [
+              "LOG-12348",
+              "FILE:target_app/v1.5.0/main.py:93",
+              "GRAPH:pool:postgres"
+            ],
+            "contradicting": []
+          },
+          {
+            "label": "exploit",
+            "confidence": "low",
+            "supporting": [],
+            "contradicting": [
+              "LOG-12348"
+            ]
+          }
+        ],
+        "verdict": "regression",
+        "owasp": null,
+        "finding_verdicts": [
+          {
+            "finding_id": "SAST-001",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SAST-002",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SAST-003",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-001",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-002",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-003",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-004",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-005",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-006",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-007",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-008",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-009",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-010",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "SCA-011",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "DAST-001",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "DAST-002",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "DAST-003",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "DAST-004",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "DAST-005",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          },
+          {
+            "finding_id": "DAST-006",
+            "verdict": "decoy",
+            "reason": "Decoy/unrelated finding; incident is a performance regression caused by N+1 inventory queries",
+            "citations": [
+              "FILE:target_app/v1.5.0/main.py:93"
+            ]
+          }
+        ],
+        "path": [
+          {
+            "description": "Multi-item orders sent to v1.5.0 trigger N+1 unindexed inventory queries",
+            "citation": "LOG-12348"
+          },
+          {
+            "description": "Per-item inventory queries block the 5-connection postgres pool",
+            "citation": "FILE:target_app/v1.5.0/main.py:93"
+          },
+          {
+            "description": "Connection pool starvation impacts both /api/orders and /api/products",
+            "citation": "GRAPH:route:/api/products"
+          }
+        ],
+        "blast_radius": {
+          "severity": "medium",
+          "summary": "Availability degradation on /api/orders and shared pool endpoint /api/products due to connection pool contention",
+          "nodes": [
+            {
+              "node_id": "route:/api/orders",
+              "impact": "confirmed",
+              "reason": "High latency on order processing",
+              "citations": [
+                "LOG-12348"
+              ]
+            },
+            {
+              "node_id": "route:/api/products",
+              "impact": "likely",
+              "reason": "Shares postgres connection pool",
+              "citations": [
+                "GRAPH:route:/api/products"
+              ]
+            }
+          ]
+        },
+        "mitigations": [
+          {
+            "action": "rollback",
+            "rank": 1,
+            "title": "Rollback traffic 100% to last stable release (v1.4.0)",
+            "rationale": "Release 1.4.0 lacks the N+1 inventory regression, is healthy in registry, and passes all preconditions",
+            "expected_effect": "Restores baseline latency on orders and products",
+            "risk": "Low",
+            "preconditions": [],
+            "executable": true,
+            "params": {
+              "version": "1.4.0"
+            }
+          }
+        ],
+        "rejected_options": [
+          {
+            "action": "block_rule",
+            "why": "Issue is internal code regression on multi-item orders, not malicious traffic",
+            "citations": [
+              "LOG-12348"
+            ]
+          }
+        ],
+        "remediation": [
+          "Add index on inventory(sku, warehouse)",
+          "Batch inventory queries using WHERE sku = ANY(%s) instead of looping"
+        ]
+      }
+    },
+    {
+      "event": "verification",
+      "data": {
+        "valid": true,
+        "errors": [],
+        "warnings": [],
+        "citations_checked": 30,
+        "citations_valid": 30,
+        "all_findings_covered": true,
+        "rollback_allowed": true
+      }
+    },
+    {
+      "event": "done",
+      "data": {
+        "status": "success",
+        "verdict": "regression",
+        "valid": true
+      }
+    }
+  ]
+}
