@@ -17,12 +17,14 @@ interface MetricsChartProps {
   metrics: Record<string, RouteMetrics> | null;
   selectedRoute: string;
   markerText?: string;
+  onInvestigate?: () => void;
 }
 
 export const MetricsChart: React.FC<MetricsChartProps> = ({
   metrics,
   selectedRoute,
-  markerText
+  markerText,
+  onInvestigate
 }) => {
   const currentMetric = metrics?.[selectedRoute] || metrics?.['/api/orders|all'] || {
     p50_ms: 120,
@@ -132,6 +134,34 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Real-Time Degradation Alert Banner */}
+      {isDegraded && (
+        <div className="bg-red-950/80 border border-red-700/80 p-3 rounded-lg flex items-center justify-between text-xs animate-in fade-in">
+          <div className="flex items-center space-x-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-ping shrink-0" />
+            <div>
+              <div className="font-bold text-red-200 flex items-center space-x-2">
+                <span>INCIDENT ANOMALY DETECTED:</span>
+                <span className="font-mono text-red-300">p95 @ {Math.round(currentMetric.p95_ms)}ms (SLO: 150ms)</span>
+              </div>
+              <p className="text-[11px] text-red-300 font-mono">
+                Postgres connection pool starvation detected (5/5 connections blocked). Gateway timeouts occurring on checkout routes.
+              </p>
+            </div>
+          </div>
+
+          {onInvestigate && (
+            <button
+              type="button"
+              onClick={onInvestigate}
+              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold font-mono shrink-0 shadow-md flex items-center space-x-1"
+            >
+              <span>Correlate RCA</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

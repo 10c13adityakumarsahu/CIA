@@ -26,6 +26,8 @@ import { AttackPathGraph } from './components/AttackPathGraph';
 import { BlastRadiusGraph } from './components/BlastRadiusGraph';
 import { MitigationView } from './components/MitigationView';
 import { PitchRcaView } from './components/PitchRcaView';
+import { IncidentStepper, IncidentStep } from './components/IncidentStepper';
+import { ReportExportModal } from './components/ReportExportModal';
 import { CitationDrawer } from './components/CitationDrawer';
 import { Terminal, Shield, GitPullRequest, Activity, AlertCircle, Sparkles } from 'lucide-react';
 import { cn } from './lib/utils';
@@ -43,6 +45,8 @@ export function App() {
   const [markerText, setMarkerText] = useState<string | undefined>(undefined);
   const [selectedCitation, setSelectedCitation] = useState<CitationDetail | null>(null);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState<IncidentStep>('telemetry');
 
   // Initial load and polling
   const loadInitialData = useCallback(async () => {
@@ -154,6 +158,23 @@ export function App() {
     loadInitialData();
   };
 
+  const isDegraded = (metrics?.['/api/orders|all']?.p95_ms || 0) > 1000;
+
+  const handleStepSelect = (step: IncidentStep) => {
+    setCurrentStep(step);
+    if (step === 'telemetry') {
+      setActiveTab('investigate');
+    } else if (step === 'scans') {
+      setActiveTab('pitch_rca');
+    } else if (step === 'gemma_rca') {
+      setActiveTab('investigate');
+    } else if (step === 'blast_radius') {
+      setActiveTab('blast_radius');
+    } else if (step === 'mitigate') {
+      setActiveTab('mitigation');
+    }
+  };
+
   const mode = state?.mode || 'LIVE';
 
   return (
@@ -166,6 +187,16 @@ export function App() {
         onSelectScenario={handleSelectScenario}
         onReset={handleReset}
         onInvestigate={handleInvestigate}
+      />
+
+      {/* Guided Incident Lifecycle Stepper */}
+      <IncidentStepper
+        currentStep={currentStep}
+        onSelectStep={handleStepSelect}
+        onExportReport={() => setIsExportOpen(true)}
+        isDegraded={isDegraded}
+        hasReport={report !== null}
+        isInvestigating={isInvestigating}
       />
 
       {/* Optional Error Banner */}
@@ -197,6 +228,7 @@ export function App() {
             metrics={metrics}
             selectedRoute="/api/orders|all"
             markerText={markerText}
+            onInvestigate={handleInvestigate}
           />
 
           {/* Navigation Tab Bar */}
@@ -334,6 +366,16 @@ export function App() {
       <CitationDrawer
         citation={selectedCitation}
         onClose={() => setSelectedCitation(null)}
+      />
+
+      {/* Incident & Vulnerability Export Modal */}
+      <ReportExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        report={report}
+        findings={findings}
+        verification={verification}
+        state={state}
       />
     </div>
   );

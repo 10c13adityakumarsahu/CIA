@@ -65,7 +65,7 @@ export const FindingsRail: React.FC<FindingsRailProps> = ({
         </div>
         <div className="flex items-center space-x-1.5 text-[11px] font-mono text-slate-400">
           <span className="px-2 py-0.5 rounded bg-[#0B0F19] text-amber-300 border border-[#334155]">
-            {findings.length} total
+            {safeFindings.length} total
           </span>
           {findingVerdicts.length > 0 && (
             <span className="px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800 animate-pulse">
