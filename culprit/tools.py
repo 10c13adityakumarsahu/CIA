@@ -168,6 +168,19 @@ def git_diff() -> str:
         return f"Error executing git diff: {exc}"
 
 
+def diff_versions(path: str = "main.py", v1: str = "v1.4.0", v2: str = "v1.5.0") -> str:
+    """Compute unified diff between two versions of a target_app file (e.g. v1.4.0 and v1.5.0)."""
+    import difflib
+    f1 = REPO_ROOT / f"target_app/{v1}/{path}"
+    f2 = REPO_ROOT / f"target_app/{v2}/{path}"
+    if not f1.exists() or not f2.exists():
+        return git_diff()
+    lines1 = f1.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+    lines2 = f2.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+    diff = "".join(difflib.unified_diff(lines1, lines2, fromfile=f"target_app/{v1}/{path}", tofile=f"target_app/{v2}/{path}"))
+    return diff.strip()
+
+
 def service_manifest() -> Dict[str, Any]:
     """Return infrastructure service manifest."""
     return {

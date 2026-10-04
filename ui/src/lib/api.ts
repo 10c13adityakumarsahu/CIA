@@ -210,6 +210,21 @@ export function subscribeMitigationVerify(
   return () => es.close();
 }
 
+export async function fetchDiff(v1 = 'v1.4.0', v2 = 'v1.5.0', path = 'main.py'): Promise<{ v1: string; v2: string; path: string; diff: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/diff?v1=${v1}&v2=${v2}&path=${path}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  } catch {
+    return {
+      v1,
+      v2,
+      path,
+      diff: `--- a/target_app/${v1}/${path}\n+++ b/target_app/${v2}/${path}\n@@ -71,8 +80,18 @@\n-    query = f"SELECT id, price FROM products WHERE sku = '{order.sku}'"\n+    # VULNERABILITY 2 + 3: N+1 unindexed query loop\n+    for item in all_items:\n+        cur.execute("SELECT qty FROM inventory WHERE sku = %s AND warehouse = 'main'", (item.sku,))`
+    };
+  }
+}
+
 export async function resolveCitation(citation: string): Promise<CitationDetail> {
   const raw = citation.trim();
   if (raw.startsWith('LOG-')) {
@@ -276,14 +291,26 @@ export async function resolveCitation(citation: string): Promise<CitationDetail>
     }
   }
 
-  if (raw.startsWith('DIFF:')) {
-    return {
-      id: raw,
-      type: 'diff',
-      title: `Git Diff: ${raw}`,
-      content: `--- a/target_app/v1.4.0/app.py\n+++ b/target_app/v1.5.0/app.py\n@@ -53,6 +53,10 @@\n-    # Batch query in 1.4.0\n+    for item in order.items:\n+        cur.execute(f"SELECT qty FROM inventory WHERE sku = '{item.sku}'")`,
-      language: 'diff'
-    };
+  if (raw.startsWith('DIFF:') || raw.startsWith('GIT:DIFF')) {
+    try {
+      const diffData = await fetchDiff('v1.4.0', 'v1.5.0', 'main.py');
+      return {
+        id: raw,
+        type: 'diff',
+        title: `Release Diff: v1.4.0 (LKG) -> v1.5.0 (Current)`,
+        content: diffData.diff,
+        language: 'diff',
+        metadata: diffData
+      };
+    } catch {
+      return {
+        id: raw,
+        type: 'diff',
+        title: `Release Diff: v1.4.0 -> v1.5.0`,
+        content: `--- a/target_app/v1.4.0/main.py\n+++ b/target_app/v1.5.0/main.py\n@@ -71,8 +80,18 @@\n-    query = f"SELECT id, price FROM products WHERE sku = '{order.sku}'"\n+    # VULNERABILITY 2 + 3: N+1 unindexed query loop\n+    for item in all_items:\n+        cur.execute("SELECT qty FROM inventory WHERE sku = %s AND warehouse = 'main'", (item.sku,))`,
+        language: 'diff'
+      };
+    }
   }
 
   if (raw.startsWith('GRAPH:')) {

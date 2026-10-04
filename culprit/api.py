@@ -166,6 +166,20 @@ def get_source_code(
         raise HTTPException(status_code=404, detail=str(exc))
 
 
+@app.get("/api/diff")
+def get_release_diff(
+    v1: str = Query("v1.4.0", description="Base version"),
+    v2: str = Query("v1.5.0", description="Target version"),
+    path: str = Query("main.py", description="Target file name"),
+):
+    try:
+        from culprit.tools import diff_versions
+        diff_text = diff_versions(path=path, v1=v1, v2=v2)
+        return {"v1": v1, "v2": v2, "path": path, "diff": diff_text}
+    except Exception as exc:
+        return {"v1": v1, "v2": v2, "path": path, "diff": git_diff(), "error": str(exc)}
+
+
 @app.get("/api/logs/{log_id}")
 def get_single_log(log_id: str):
     results = search_logs(query=log_id, limit=1)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Code,
   Sparkles,
@@ -10,9 +10,11 @@ import {
   CheckCircle2,
   ArrowRight,
   GitCompare,
-  Wrench
+  Wrench,
+  GitPullRequest
 } from 'lucide-react';
 import { CitationChip } from './CitationChip';
+import { fetchDiff, fetchSource } from '../lib/api';
 import { cn } from '../lib/utils';
 
 interface CulpritCodeSnippetCardProps {
@@ -24,8 +26,19 @@ export const CulpritCodeSnippetCard: React.FC<CulpritCodeSnippetCardProps> = ({
   scenario,
   onSelectCitation
 }) => {
-  const [activeTab, setActiveTab] = useState<'diff' | 'vulnerable' | 'fixed'>('diff');
+  const [activeTab, setActiveTab] = useState<'diff' | 'vulnerable' | 'fixed' | 'git_diff'>('git_diff');
   const [copied, setCopied] = useState(false);
+  const [liveDiff, setLiveDiff] = useState<string>('');
+
+  useEffect(() => {
+    fetchDiff('v1.4.0', 'v1.5.0', 'main.py')
+      .then((res) => {
+        if (res?.diff) setLiveDiff(res.diff);
+      })
+      .catch((err) => {
+        console.warn('Could not fetch live diff', err);
+      });
+  }, [scenario]);
 
   // Scenario A: SQL Injection in orders()
   // Scenario B: N+1 DB loop in products()
@@ -141,6 +154,19 @@ def orders():
           <div className="flex bg-slate-200/80 p-0.5 rounded-lg border border-slate-300/60 text-xs">
             <button
               type="button"
+              onClick={() => setActiveTab('git_diff')}
+              className={cn(
+                'px-2.5 py-1 rounded-md font-medium transition flex items-center space-x-1',
+                activeTab === 'git_diff'
+                  ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              )}
+            >
+              <GitPullRequest className="w-3 h-3" />
+              <span>Git Code Diff</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('diff')}
               className={cn(
                 'px-2.5 py-1 rounded-md font-medium transition flex items-center space-x-1',
@@ -183,6 +209,26 @@ def orders():
 
       {/* Code Display Area */}
       <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Full Git Code Diff View */}
+        {activeTab === 'git_diff' && (
+          <div className="md:col-span-2">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-t-lg text-xs font-semibold text-blue-900">
+              <span className="flex items-center space-x-1.5">
+                <GitPullRequest className="w-3.5 h-3.5 text-blue-600" />
+                <span>Git Code Diff: v1.4.0 (Stable LKG) ➔ v1.5.0 (Culprit Release)</span>
+              </span>
+              <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.2 rounded text-blue-800 font-bold">
+                target_app/v1.5.0/main.py
+              </span>
+            </div>
+            <div className="bg-slate-950 p-3 rounded-b-lg border-x border-b border-slate-800 font-mono text-xs overflow-x-auto text-slate-200 leading-relaxed shadow-inner max-h-64">
+              <pre className="whitespace-pre">
+                {liveDiff || `--- a/target_app/v1.4.0/main.py\n+++ b/target_app/v1.5.0/main.py\n@@ -71,8 +80,18 @@\n-    query = f"SELECT id, price FROM products WHERE sku = '{order.sku}'"\n+    # VULNERABILITY 2 + 3: N+1 unindexed query loop\n+    for item in all_items:\n+        cur.execute("SELECT qty FROM inventory WHERE sku = %s AND warehouse = 'main'", (item.sku,))`}
+              </pre>
+            </div>
+          </div>
+        )}
+
         {/* Left / Vulnerable Code Block */}
         {(activeTab === 'diff' || activeTab === 'vulnerable') && (
           <div className={cn(activeTab === 'vulnerable' && 'md:col-span-2')}>
