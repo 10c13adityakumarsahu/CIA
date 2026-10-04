@@ -60,7 +60,7 @@ export const InvestigationFeed: React.FC<InvestigationFeedProps> = ({
                 {verification?.valid && (
                   <span className="px-2 py-0.5 rounded text-xs font-mono bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
-                    Code-Verified ({verification.verified_citations.length} citations)
+                    Code-Verified ({(verification as any)?.citations_valid ?? verification?.verified_citations?.length ?? 0} citations)
                   </span>
                 )}
               </div>
@@ -80,8 +80,10 @@ export const InvestigationFeed: React.FC<InvestigationFeedProps> = ({
               Competing Hypotheses Evaluation
             </span>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {report.hypotheses.map((hyp) => {
+              {(report.hypotheses || []).map((hyp) => {
                 const isWinner = hyp.label === report.verdict;
+                const supporting = hyp.supporting || [];
+                const contradicting = hyp.contradicting || [];
                 return (
                   <div
                     key={hyp.label}
@@ -111,11 +113,11 @@ export const InvestigationFeed: React.FC<InvestigationFeedProps> = ({
                     </div>
 
                     {/* Supporting */}
-                    {hyp.supporting.length > 0 && (
+                    {supporting.length > 0 && (
                       <div className="space-y-1">
                         <span className="text-[11px] text-emerald-400 font-semibold">Supporting:</span>
                         <div className="flex flex-wrap gap-1">
-                          {hyp.supporting.map((cite, idx) => (
+                          {supporting.map((cite, idx) => (
                             <CitationChip key={idx} citation={cite} onClick={onSelectCitation} />
                           ))}
                         </div>
@@ -123,11 +125,11 @@ export const InvestigationFeed: React.FC<InvestigationFeedProps> = ({
                     )}
 
                     {/* Contradicting */}
-                    {hyp.contradicting.length > 0 && (
+                    {contradicting.length > 0 && (
                       <div className="space-y-1">
                         <span className="text-[11px] text-red-400 font-semibold">Contradicting:</span>
                         <div className="flex flex-wrap gap-1">
-                          {hyp.contradicting.map((cite, idx) => (
+                          {contradicting.map((cite, idx) => (
                             <CitationChip key={idx} citation={cite} onClick={onSelectCitation} />
                           ))}
                         </div>

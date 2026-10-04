@@ -21,7 +21,7 @@ interface FindingsRailProps {
 }
 
 export const FindingsRail: React.FC<FindingsRailProps> = ({
-  findings,
+  findings = [],
   findingVerdicts = [],
   onSelectCitation
 }) => {
@@ -29,9 +29,11 @@ export const FindingsRail: React.FC<FindingsRailProps> = ({
   const [selectedSource, setSelectedSource] = useState<'all' | 'sast' | 'sca' | 'dast'>('all');
   const [decoysCollapsed, setDecoysCollapsed] = useState(true);
 
-  const verdictMap = new Map(findingVerdicts.map(v => [v.finding_id, v]));
+  const safeFindings = findings || [];
+  const safeVerdicts = findingVerdicts || [];
+  const verdictMap = new Map(safeVerdicts.map(v => [v.finding_id, v]));
 
-  const filtered = findings.filter(f => {
+  const filtered = safeFindings.filter(f => {
     const matchesSource = selectedSource === 'all' || f.source === selectedSource;
     const matchesSearch =
       f.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

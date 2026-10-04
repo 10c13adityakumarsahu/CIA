@@ -26,11 +26,13 @@ interface MitigationViewProps {
 }
 
 export const MitigationView: React.FC<MitigationViewProps> = ({
-  mitigations,
-  rejectedOptions,
+  mitigations = [],
+  rejectedOptions = [],
   onSelectCitation,
   onMitigationExecuted
 }) => {
+  const safeMitigations = mitigations || [];
+  const safeRejected = rejectedOptions || [];
   const [previewData, setPreviewData] = useState<{ action: string; diff: string; preconditions: PreconditionCheck[] } | null>(null);
   const [executingAction, setExecutingAction] = useState<string | null>(null);
   const [activeMitigationId, setActiveMitigationId] = useState<string | null>(null);
@@ -173,13 +175,13 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
           </span>
         </div>
 
-        {mitigations.length === 0 ? (
+        {safeMitigations.length === 0 ? (
           <div className="bg-[#111827] border border-[#334155] rounded-xl p-8 text-center text-xs font-mono text-slate-400">
             No mitigations proposed yet. Start an investigation to generate code-verified actions.
           </div>
         ) : (
           <div className="space-y-4">
-            {mitigations.map((mit) => {
+            {safeMitigations.map((mit) => {
               const isApplied = appliedAction === mit.action;
               const allPreconditionsSatisfied = mit.preconditions?.every(p => p.satisfied) ?? true;
 
@@ -324,7 +326,7 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
       )}
 
       {/* Rejected Options / Not Recommended Section */}
-      {rejectedOptions.length > 0 && (
+      {safeRejected.length > 0 && (
         <div className="space-y-3 pt-4 border-t border-[#334155]">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-red-400 flex items-center">
@@ -334,7 +336,7 @@ export const MitigationView: React.FC<MitigationViewProps> = ({
           </div>
 
           <div className="space-y-2">
-            {rejectedOptions.map((opt) => (
+            {safeRejected.map((opt) => (
               <div
                 key={opt.action}
                 className="p-3.5 rounded-lg bg-[#0B0F19] border border-red-900/60 flex flex-col space-y-2"
