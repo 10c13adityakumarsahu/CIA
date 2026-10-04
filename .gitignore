@@ -9,3 +9,5 @@ dist/
 findings/*.json
 cache/*.json
 scenarios/*/truth.json
+logs/
+

@@ -73,15 +73,30 @@ check-s2:
 	assert not any('n+1' in f.title.lower() or 'n+1' in f.detail.lower() for f in findings), 'N+1 should not be a finding'; \
 	print('OK: Findings normalized count=' + str(len(findings)))"
 
-# S3: findings JSON present for all three scanners.
+# S3: Gateway, loadgen, ledger, scenarios, and check-s3 acceptance.
 check-s3:
-	@echo "--- check-s3: findings present ---"
-	@python3 -c "\
-import pathlib, sys; \
-required=['SAST-001','SCA-001','DAST-001']; \
-found=[f.stem for f in pathlib.Path('findings').glob('*.json')]; \
-missing=[r for r in required if not any(r in f for f in found)]; \
-(print('FAIL missing:',missing) or sys.exit(1)) if missing else print('OK')"
+	@echo "--- check-s3: gateway, ledger, scenarios & routing ---"
+	@python -m pytest tests/test_stage3.py -v && python -c "\
+	import requests, time; \
+	from ledger import Ledger, seed_ledger; \
+	from scenarios.inject import start_scenario_a, start_scenario_b, reset_scenario; \
+	gw = 'http://localhost:8080'; \
+	r = requests.get(f'{gw}/health'); assert r.status_code == 200, 'Gateway health check failed'; \
+	l = seed_ledger(); assert l.get_lkg() == '1.4.0', 'Ledger LKG != 1.4.0'; \
+	assert l.find_last_stable() == '1.4.0', 'find_last_stable != 1.4.0'; \
+	requests.post(f'{gw}/admin/weights', json={'blue': 0, 'green': 100}); \
+	assert requests.post(f'{gw}/api/orders', json={'customer_id': 1, 'sku': 'WIDGET-001', 'qty': 1}).json().get('version') == '1.4.0'; \
+	rule_resp = requests.post(f'{gw}/admin/rules', json={'route': '/api/orders', 'field': 'sku', 'regex': 'BLOCK_TEST'}).json(); \
+	assert requests.post(f'{gw}/api/orders', json={'customer_id': 1, 'sku': 'BLOCK_TEST', 'qty': 1}).status_code == 403; \
+	requests.delete(f'{gw}/admin/rules/' + rule_resp['rule']['id']); \
+	res_a = start_scenario_a(gw, burst_count=8, sleep_delay=8); \
+	m_a = requests.get(f'{gw}/admin/state').json().get('metrics', {}).get('/api/orders|all', {}); \
+	p95 = m_a.get('p95_ms', 0); \
+	assert p95 >= 5000, f'Expected p95 ~8s after Scenario A, got {p95}'; \
+	res_b = start_scenario_b(gw, num_requests=10); \
+	assert requests.get(f'{gw}/admin/state').json().get('weights') == {'blue': 100, 'green': 0}; \
+	reset_scenario(gw); \
+	print('OK: Stage 3 Gateway, Ledger, and Scenario checks passed!')"
 
 # S4: Neo4j graph populated (node count > 0).
 check-s4:

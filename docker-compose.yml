@@ -119,18 +119,38 @@ services:
       start_period: 15s
     logging: *default-logging
 
-  # gateway:       # weighted proxy + JSONL logger  :8080  (Stage 2)
-  #   build: ./gateway
-  #   depends_on:
-  #     blue: { condition: service_healthy }
-  #     green: { condition: service_healthy }
-  #     redis: { condition: service_healthy }
-  #   ports: ["8080:8080"]
+  gateway:       # weighted proxy + JSONL logger  :8080
+    build: ./gateway
+    restart: unless-stopped
+    environment:
+      BLUE_URL: http://blue:8000
+      GREEN_URL: http://green:8000
+      LOG_FILE_PATH: /app/logs/gateway.jsonl
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      blue: { condition: service_healthy }
+      green: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    logging: *default-logging
 
-  # loadgen:       # steady traffic generator  (Stage 2)
-  #   build: ./loadgen
-  #   depends_on:
-  #     gateway: { condition: service_healthy }
+  loadgen:       # steady traffic generator
+    build: ./loadgen
+    restart: unless-stopped
+    environment:
+      GATEWAY_URL: http://gateway:8080
+      LOAD_RPS: "5.0"
+    depends_on:
+      gateway: { condition: service_healthy }
+    logging: *default-logging
 
   # culprit-api:   # culprit backend  :9000  (Stage 5)
   #   build: ./culprit
