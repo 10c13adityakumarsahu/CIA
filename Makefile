@@ -15,8 +15,9 @@ down:
 # ── Demo / scenario targets (Stage 2+) ──────────────────────────────────────
 
 demo:
-	@echo "==> Full demo requires Stage 2+ services. Run 'make up' first."
-	@docker compose ps
+	@echo "==> Starting full CULPRIT stack..."
+	docker compose up -d --wait
+	@echo "==> Full stack online! Open http://localhost:5173"
 
 rescan:
 	@echo "==> Running full rescan (SAST, SCA, DAST)..."
@@ -136,7 +137,7 @@ check-s7:
 	@echo "--- check-s7: UI build, mock server & replay flows ---"
 	@python -m pytest tests/test_stage7.py -v && echo OK
 
-# S8: UI loads at :5173.
+# S8: Full system integration & clean-machine verification.
 check-s8:
-	@echo "--- check-s8: UI health ---"
-	@curl -sf http://localhost:5173 && echo OK || (echo FAIL && exit 1)
+	@echo "--- check-s8: full system integration & acceptance ---"
+	@python -m pytest tests/ -v && echo OK

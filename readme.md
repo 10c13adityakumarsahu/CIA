@@ -1,829 +1,95 @@
-The core implementation goal is:
+# CULPRIT: Autonomous Incident Root-Cause Correlation & Decision Support
 
-Given an incident + evidence from logs/code/git/SAST/SCA/DAST, have Gemma investigate competing hypotheses and produce an evidence-verified conclusion.
+CULPRIT is an autonomous incident investigation and decision support system. When latency surges or error rates spike, the Gemma 4 agent correlates live gateway logs, multi-version SAST/SCA/DAST findings, and a Neo4j blast radius graph to investigate competing hypotheses (`exploit`, `regression`, `infra`), output an evidence-grounded report, and propose safety-verified mitigations.
 
-1. High-level architecture
-                         ┌──────────────────┐
-                         │  Demo Web App     │
-                         │ FastAPI + Postgres│
-                         └────────┬─────────┘
-                                  │
-                    ┌─────────────┴─────────────┐
-                    │                           │
-                 Incident                    Security
-                  Traffic                    Scanners
-                    │                    ┌──────┼──────┐
-                    ▼                    ▼      ▼      ▼
-                  Logs                 SAST    SCA    DAST
-                    │                    │      │      │
-                    └────────────────────┼──────┼──────┘
-                                         ▼
-                               ┌──────────────────┐
-                               │ Evidence Store   │
-                               │ Normalized JSON  │
-                               └────────┬─────────┘
-                                        │
-                                        ▼
-                              ┌────────────────────┐
-                              │   CULPRIT AGENT    │
-                              │      Gemma 4        │
-                              └─────────┬──────────┘
-                                        │
-                            Tool-calling investigation
-                                        │
-                  ┌─────────────────────┼─────────────────────┐
-                  ▼                     ▼                     ▼
-              Search logs          Read source            Git diff
-                  │                     │                     │
-                  └─────────────────────┼─────────────────────┘
-                                        ▼
-                              Competing hypotheses
-                                        │
-                                        ▼
-                              Structured investigation
-                                        │
-                                        ▼
-                           ┌────────────────────────┐
-                           │ Grounding Verifier     │
-                           └────────────┬───────────┘
-                                        ▼
-                               Investigation UI
+---
 
-The key architectural principle is:
+## 🚀 One-Command Quickstart
 
-Gemma should not directly access everything.
+To build and launch the complete stack:
 
-Give it controlled tools. That makes the agent predictable and makes the demo much easier to explain.
+```bash
+make demo
+```
 
-2. Build the demo application first
-Use a very small FastAPI application.
+This brings up:
+- **UI Command Center**: http://localhost:5173
+- **Culprit API**: http://localhost:9000
+- **Gateway Proxy**: http://localhost:8080
+- **Shop App Blue (v1.5.0)**: http://localhost:8001
+- **Shop App Green (v1.4.0)**: http://localhost:8002
+- **PostgreSQL Database**: `localhost:5432`
+- **Neo4j Graph**: `localhost:7474` (Bolt: `localhost:7687`)
+- **Redis Release Ledger**: `localhost:6379`
+- **Docker Registry**: `http://localhost:5000`
 
-I'd use an e-commerce domain because everyone understands it.
+---
 
-/api/orders
-/api/products
-/api/users
-/api/payments
+## ⚙️ Environment Variables
 
-But you really only need one important endpoint:
+Create a `.env` file based on `.env.example`:
 
-POST /api/orders
+```bash
+# LLM Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMMA_MODEL=gemma-4-26b-a4b-it  # or gemma-4-31b-it
 
-with something like:
+# Execution Mode: LIVE (interacts with local LLM & services) or REPLAY (offline cached runs)
+CULPRIT_MODE=LIVE
 
-{
-  "product_id": 10,
-  "quantity": 2,
-  "coupon": "WELCOME10"
-}
+# Infrastructure
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=culprit
+NEO4J_AUTH=none
+```
 
-Have the application interact with PostgreSQL.
+---
 
-3. Create the intentionally vulnerable code
-For example, create a deliberately unsafe query path:
+## 🔍 Live vs. Seeded vs. Replayed Components
 
-query = (
-    "SELECT discount "
-    "FROM coupons "
-    f"WHERE code = '{coupon}'"
-)
+| Component | Nature | Description |
+|---|---|---|
+| **Gateway & Traffic** | **LIVE** | FastAPI + httpx reverse proxy (:8080) logging every request to `logs/gateway.jsonl` with live rolling p50/p95/err_rate metrics and dynamic routing weights. |
+| **Target Applications** | **LIVE** | Real containerized Python FastAPI services (v1.5.0 on Blue :8001, v1.4.0 on Green :8002) connected to PostgreSQL. |
+| **Neo4j Code Graph** | **LIVE** | Ingested via AST/regex from `target_app/v1.5.0` code, mapping Gateway -> Routes -> Functions -> DB Tables -> Pools -> Roles. |
+| **Security Findings** | **LIVE Scans** | Real Semgrep, Trivy, and ZAP output normalized into deterministic IDs (`SAST-001..`, `SCA-001..`, `DAST-001..`) with cross-version fingerprints. |
+| **Incident Traffic** | **Injected** | Scenario A injects a canned burst with SQL time-delay payload to `:8080`; Scenario B shifts 100% traffic to v1.5.0 (triggering N+1 inventory loop exhaustion). |
+| **Release Ledger** | **Seeded** | Redis ledger tracking `1.3.0` (stable), `1.4.0` (stable / LKG), and `1.5.0` (current / degraded). |
+| **Service Manifest** | **Config** | Hand-written topology manifest detailing DB role permissions, max pool size, and route mappings. |
+| **REPLAY Mode** | **Offline Cache** | Serves recorded investigation streams and reports directly from `cache/` with zero external network access. |
 
-This gives Semgrep something meaningful to detect.
+---
 
-But don't stop there.
+## 🛡️ Security Scanners & Rules
 
-The same code should exist in both incident scenarios.
+- **SAST**: Semgrep scanning local rules in `scanners/rules/` (`sql-fstring-exec.yaml`, `weak-hash.yaml`, `subprocess-shell.yaml`) across versions 1.3.0, 1.4.0, 1.5.0.
+- **SCA**: Trivy filesystem scanner (`trivy fs --scanners vuln --format json`) analyzing pinned dependencies in `requirements.txt`.
+- **DAST**: OWASP ZAP API scanner (`zap-api-scan.py`) against Blue's `/openapi.json`.
 
-That's crucial.
+---
 
-4. Create two deterministic incidents
-This is the heart of your demo.
+## 🔒 Safety Guarantees & Constraints
 
-Incident A — Attack
-The request contains a controlled time-delay SQL injection payload.
+1. **Model Proposes, Code Verifies, Human Approves**: The model never executes commands directly. All mitigation actions require code verification and operator approval.
+2. **Deterministic Preconditions**: Computed exclusively by code (target health, registry image existence, schema compatibility, absence of implicated findings in target).
+3. **Rollback Rejection**: If an implicated vulnerability exists in older versions (e.g. SQLi present in 1.4.0 during Scenario A), rollback is strictly **REJECTED** by code verifiers.
+4. **Strict Citation Resolution**: Every claim in the report must resolve to an exact log ID (`LOG-n`), finding ID (`SAST-n`), file line (`FILE:path:line`), git diff (`DIFF:hunk`), or graph node (`GRAPH:id`).
 
-Conceptually:
+---
 
-POST /api/orders
+## 🧪 Acceptance Testing
 
-coupon=<controlled test payload>
+Run stage-by-stage acceptance tests:
 
-The resulting log contains:
-
-request_id=ATTACK-001
-endpoint=/api/orders
-database_error=...
-query_duration=8.1s
-input_pattern=...
-
-The evidence should indicate:
-
-SAST → unsafe SQL
-DAST → injection finding
-Logs → suspicious input + corresponding delay
-Code → unsafe query
-Git → no relevant performance change
-
-Gemma should conclude:
-
-LIKELY ATTACK
-Confidence: HIGH
-
-Incident B — Regression
-Same endpoint.
-
-Same vulnerable code.
-
-Same scanner findings.
-
-But this time the request is completely normal.
-
-The recent code change introduces something like:
-
-for item in items:
-    query_database(item)
-
-instead of batching the query.
-
-Now the logs show:
-
-request_id=REGRESSION-001
-endpoint=/api/orders
-database_error=timeout
-query_duration=8.0s
-input=normal
-
-And git shows:
-
-commit abc123
-Changed order processing
-Added database query inside loop
-
-Gemma should conclude:
-
-LIKELY REGRESSION
-Confidence: HIGH
-
-The SAST finding remains real, but:
-
-SAST-001
-→ RELATED TO CODE
-→ NOT CAUSAL TO THIS INCIDENT
-
-That is your killer demonstration.
-
-5. Don't actually exploit anything during the demo
-You don't need an exploit framework.
-
-Create controlled requests against your own local application and record deterministic results.
-
-For example:
-
-scenario_attack.json
-scenario_regression.json
-
-Each scenario can define:
-
-{
-  "scenario": "attack",
-  "endpoint": "/api/orders",
-  "request_ids": [
-    "ATTACK-001",
-    "ATTACK-002"
-  ]
-}
-
-Then your demo can simply run:
-
-python simulate.py attack
-
-or:
-
-python simulate.py regression
-
-This gives you reproducibility.
-
-6. Run real scanners
-You don't want mocked scanner results if you can avoid it.
-
-SAST — Semgrep
-Run Semgrep against your application.
-
-Output something like:
-
-{
-  "check_id": "sql-injection",
-  "path": "app/orders.py",
-  "start": {
-    "line": 42
-  },
-  "severity": "ERROR"
-}
-
-Normalize it.
-
-SCA — Trivy
-Run Trivy against your dependencies/container.
-
-Get:
-
-package
-version
-vulnerability
-severity
-
-Normalize that too.
-
-DAST — OWASP ZAP
-For hackathon reliability, I agree with your proposal:
-
-Pre-run ZAP and save the JSON.
-
-Don't make the live demo depend on ZAP finishing successfully in real time.
-
-You can show:
-
-DAST scan: completed
-Findings: 6
-
-and load the prepared report.
-
-7. Create a unified evidence schema
-This is extremely important.
-
-Don't give Gemma five completely different formats.
-
-Convert everything into one schema.
-
-For example:
-
-{
-  "id": "SAST-001",
-  "source": "sast",
-  "type": "sql_injection",
-  "severity": "HIGH",
-  "file": "app/orders.py",
-  "line": 42,
-  "endpoint": "/api/orders",
-  "description": "Unsafe SQL construction",
-  "evidence": "String concatenation used in SQL query"
-}
-
-SCA:
-
-{
-  "id": "SCA-007",
-  "source": "sca",
-  "package": "example-lib",
-  "severity": "HIGH",
-  "cve": "CVE-XXXX",
-  "description": "..."
-}
-
-Log:
-
-{
-  "id": "LOG-193",
-  "source": "runtime",
-  "timestamp": "...",
-  "endpoint": "/api/orders",
-  "request_id": "ATTACK-001",
-  "message": "Database query exceeded timeout"
-}
-
-Git:
-
-{
-  "id": "GIT-42",
-  "commit": "abc123",
-  "file": "app/orders.py",
-  "line": 71,
-  "change": "Added DB query inside loop"
-}
-
-Now your AI has a consistent evidence language.
-
-8. Build the agent tools
-This is where I'd spend most of the AI engineering effort.
-
-Give Gemma tools such as:
-
-search_logs
-{
-  "endpoint": "/api/orders",
-  "time_window": "10m"
-}
-
-Returns relevant logs.
-
-list_findings
-{
-  "source": "all",
-  "endpoint": "/api/orders"
-}
-
-Returns SAST/SCA/DAST findings.
-
-read_file
-{
-  "path": "app/orders.py",
-  "start_line": 30,
-  "end_line": 60
-}
-
-git_diff
-{
-  "since": "incident"
-}
-
-get_service_manifest
-Returns:
-
-{
-  "orders-api": {
-    "database": "postgres",
-    "role": "orders_readwrite"
-  }
-}
-
-You can add:
-
-get_log_by_id
-This is useful for citation verification.
-
-9. Make Gemma investigate rather than summarize
-The initial prompt should establish its role.
-
-Conceptually:
-
-You are Culprit, a production incident investigator.
-
-Your job is NOT to list vulnerabilities.
-
-Determine which hypothesis best explains the incident:
-
-1. Security attack
-2. Code regression
-3. Infrastructure failure
-
-You must investigate the available evidence.
-
-Do not assume a scanner finding caused the incident merely because
-it references the same endpoint.
-
-For every conclusion:
-- cite evidence IDs
-- identify contradicting evidence
-- assign confidence
-- distinguish causal findings from unrelated findings
-
-Never invent file names, lines, logs, commits or findings.
-
-Then let the model call tools.
-
-10. Agent loop
-The basic implementation can be:
-
-while not investigation_complete:
-
-    response = gemma(messages, tools=TOOLS)
-
-    if response.tool_call:
-        result = execute_tool(response.tool_call)
-        messages.append(result)
-
-    else:
-        report = parse_structured_output(response)
-        break
-
-You don't need a complex autonomous-agent framework.
-
-For a hackathon, a controlled tool loop is better.
-
-11. Force structured output
-Don't let Gemma return arbitrary Markdown.
-
-Make it produce something like:
-
-{
-  "incident_summary": "...",
-
-  "hypotheses": [
-    {
-      "label": "exploit",
-      "confidence": 0.91,
-      "supporting_evidence": [
-        "LOG-193",
-        "SAST-001",
-        "DAST-002"
-      ],
-      "contradicting_evidence": []
-    },
-    {
-      "label": "regression",
-      "confidence": 0.17,
-      "supporting_evidence": [],
-      "contradicting_evidence": [
-        "LOG-193"
-      ]
-    }
-  ],
-
-  "verdict": {
-    "label": "exploit",
-    "confidence": 0.91
-  },
-
-  "finding_verdicts": [
-    {
-      "finding_id": "SAST-001",
-      "classification": "related",
-      "reason": "...",
-      "evidence": ["LOG-193"]
-    }
-  ],
-
-  "remediation": []
-}
-
-This makes the UI and verifier straightforward.
-
-12. Build the grounding verifier
-This should not use AI.
-
-Make it deterministic.
-
-For every citation:
-
-LOG-193
-
-check:
-
-Does LOG-193 exist?
-
-For:
-
-orders.py:42
-
-check:
-
-Does orders.py exist?
-Does line 42 exist?
-Does the cited snippet match?
-
-For:
-
-SAST-001
-
-check:
-
-Does SAST-001 exist in normalized findings?
-
-Then calculate:
-
-verified_citations / total_citations
-
-Your UI can show:
-
-12/12 evidence claims verified ✓
-
-This is a fantastic visual.
-
-13. Add the rules baseline
-Keep this very simple.
-
-Something like:
-
-if finding.endpoint == incident.endpoint:
-    related += finding
-
-if finding.file in changed_files:
-    related += finding
-
-if finding.timestamp overlaps incident:
-    related += finding
-
-That's your keyword/rule correlation baseline.
-
-Then demonstrate:
-
-Attack scenario
-Rules:
-
-Security finding → related
-
-Gemma:
-
-Security attack → 91%
-
-Regression scenario
-Rules:
-
-Security finding → related
-
-Gemma:
-
-Regression → 89%
-SAST finding → decoy/non-causal
-
-This demonstrates the value of reasoning.
-
-14. UI structure
-Keep Streamlit extremely simple.
-
-I'd use four sections.
-
-Header
-CULPRIT
-AI Production Incident Investigator
-
-Incident #ATTACK-001
-POST /api/orders
-
-Section 1 — Incident
-5xx          ↑ 38%
-Latency      ↑ 8.1s
-DB Errors    ↑ 24
-
-Section 2 — Investigation
-Show tool calls:
-
-✓ Searching logs...
-✓ Reading orders.py:30-60
-✓ Checking SAST findings...
-✓ Checking DAST findings...
-✓ Checking recent git changes...
-✓ Comparing attack vs regression...
-
-This is important because judges can see the agent reasoning through tools.
-
-Section 3 — Verdict
-┌─────────────────────────────┐
-│ LIKELY SECURITY INCIDENT    │
-│ Confidence: 91%             │
-└─────────────────────────────┘
-
-Why?
-
-✓ Malicious input observed
-✓ Corresponding DB delay observed
-✓ Vulnerable code path confirmed
-✓ DAST finding matches endpoint
-
-Section 4 — Finding funnel
-71 Total Findings
-       ↓
-12 Relevant
-       ↓
-4 Supporting
-       ↓
-1 Likely Causal
-
-Clicking a finding should show the evidence.
-
-15. Then run Incident B
-Don't change the UI.
-
-Click:
-
-[ Switch Scenario ]
-
-Select:
-
-Regression
-
-Same endpoint.
-
-Same vulnerability.
-
-Same scanner backlog.
-
-Then:
-
-┌─────────────────────────────┐
-│ LIKELY CODE REGRESSION      │
-│ Confidence: 89%             │
-└─────────────────────────────┘
-
-And:
-
-SAST-001
-✓ Real vulnerability
-✗ Not causal to current incident
-
-This is your money shot.
-
-16. Project directory
-I'd keep the repository approximately:
-
-culprit/
-│
-├── app/
-│   ├── main.py
-│   ├── orders.py
-│   └── database.py
-│
-├── scenarios/
-│   ├── attack/
-│   │   ├── config.json
-│   │   └── logs.json
-│   └── regression/
-│       ├── config.json
-│       └── logs.json
-│
-├── scanners/
-│   ├── run_sast.py
-│   ├── run_sca.py
-│   └── zap_report.json
-│
-├── evidence/
-│   ├── findings.json
-│   ├── logs.json
-│   └── git.json
-│
-├── agent/
-│   ├── agent.py
-│   ├── tools.py
-│   ├── prompts.py
-│   └── schemas.py
-│
-├── verifier/
-│   └── verifier.py
-│
-├── baseline/
-│   └── rules.py
-│
-├── ui/
-│   └── app.py
-│
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-
-17. Four-hour implementation priority
-I'd actually modify your proposed schedule slightly.
-
-0:00–0:40 — Application + scenarios
-Get:
-
-FastAPI
-Postgres
-Attack scenario
-Regression scenario
-
-working.
-
-Don't touch UI yet.
-
-0:40–1:15 — Evidence pipeline
-Get:
-
-logs
-SAST
-SCA
-DAST
-git diff
-
-into one normalized JSON structure.
-
-1:15–2:30 — Gemma agent
-This is the highest priority.
-
-Implement:
-
-Gemma
- ↓
-tool call
- ↓
-tool result
- ↓
-Gemma
- ↓
-structured report
-
-Get one scenario working end-to-end.
-
-2:30–3:00 — Grounding verifier
-Implement deterministic citation validation.
-
-This is more valuable than UI polish.
-
-3:00–3:30 — Rules baseline
-Implement simple correlation.
-
-Then run:
-
-rules vs Gemma
-
-on both scenarios.
-
-3:30–4:00 — UI
-Only expose:
-
-Incident
-
-Agent investigation
-
-Verdict
-
-Evidence
-
-Noise funnel
-
-Rules vs Gemma
-
-18. What should be real?
-I'd make this distinction explicit in the UI/README.
-
-Real
-FastAPI application
-
-PostgreSQL
-
-Source code
-
-Git history
-
-Semgrep
-
-Trivy
-
-Gemma investigation
-
-Tool calls
-
-Grounding verifier
-
-Rules baseline
-
-Precomputed
-ZAP report
-
-Deterministic
-Incident traffic
-
-Scenario selection
-
-Log generation
-
-That's completely legitimate for a hackathon POC.
-
-You're demonstrating the investigation system, not pretending to have a live production environment.
-
-19. One thing I would NOT implement
-Don't build a generic RAG pipeline like:
-
-PDFs → embeddings → vector DB → LLM
-
-It doesn't fit your core idea.
-
-Your strongest architecture is:
-
-Incident
-   ↓
-Evidence retrieval
-   ↓
-Tool-using investigation
-   ↓
-Hypothesis competition
-   ↓
-Evidence-backed conclusion
-   ↓
-Deterministic verification
-
-That's much more technically interesting.
-
-20. Final implementation principle
-Think of Culprit as three layers:
-
-Layer 1 — Evidence
-What actually happened?
-
-Logs
-Code
-Git
-SAST
-SCA
-DAST
-
-Layer 2 — Reasoning
-What explanation best fits the evidence?
-
-Attack
-vs
-Regression
-vs
-Infrastructure
-
-Gemma lives here.
-
-Layer 3 — Trust
-Can we prove what the AI said?
-
-Citation verification
-Evidence IDs
-Source lines
-Confidence
-Contradicting evidence
-
-This third layer is what can make the project feel substantially more sophisticated than a normal LLM agent.
+```bash
+make check-s0  # Infra health
+make check-s1  # Target app registry & performance
+make check-s2  # SAST/SCA/DAST normalization
+make check-s3  # Gateway routing & scenario injection
+make check-s4  # Neo4j graph queries
+make check-s5  # Preconditions, verifier & executor
+make check-s6  # GenAI agent & report verification
+make check-s7  # UI build & mock server
+make check-s8  # Full integration check
+```
