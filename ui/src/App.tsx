@@ -21,6 +21,7 @@ import { Header } from './components/Header';
 import { AppSidebar, MainViewTab } from './components/AppSidebar';
 import { MetricsChart } from './components/MetricsChart';
 import { ApiMetricsTable } from './components/ApiMetricsTable';
+import { IncidentAnalysisPipelineTimeline } from './components/IncidentAnalysisPipelineTimeline';
 import { FindingsRail } from './components/FindingsRail';
 import { InvestigationFeed } from './components/InvestigationFeed';
 import { AttackPathGraph } from './components/AttackPathGraph';
@@ -275,6 +276,14 @@ export function App() {
                   onInvestigate={handleInvestigate}
                 />
               </div>
+
+              {/* End-to-End Investigation Pipeline Progression */}
+              <IncidentAnalysisPipelineTimeline
+                isInvestigating={isInvestigating}
+                hasReport={report !== null}
+                onSelectCitation={handleSelectCitation}
+                scenario={activeScenario}
+              />
 
               {/* Multi-API Percentiles & Failure Status Table */}
               <ApiMetricsTable
