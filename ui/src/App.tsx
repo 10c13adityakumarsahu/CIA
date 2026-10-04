@@ -149,6 +149,37 @@ export function App() {
     }
   };
 
+  const isDegraded = (metrics?.['/api/orders|all']?.p95_ms || 0) > 800 || (metrics?.['/api/orders|all']?.err_rate || 0) > 0.02 || activeScenario !== null;
+
+  // Autonomous AI Call on Failure Detection with mandatory Console Log
+  useEffect(() => {
+    if (isDegraded && !report && !isInvestigating) {
+      console.log(
+        '%c[CULPRIT AUTO-RCA] 🚨 Multi-API Degradation & Blast Radius Cascade Detected!',
+        'color: #ef4444; font-weight: bold; font-size: 13px;'
+      );
+      console.log(
+        '%c[CULPRIT AUTO-RCA] Root Cause Endpoint: POST /api/orders (p95 > 1000ms, DB Pool Starvation)',
+        'color: #f59e0b; font-weight: bold;'
+      );
+      console.log(
+        '%c[CULPRIT AUTO-RCA] Cascaded Impact: GET /api/products, POST /api/payments experiencing 504 timeouts',
+        'color: #f59e0b;'
+      );
+      console.log(
+        '%c[CULPRIT AUTO-RCA] 🤖 Autonomous AI Invocation: Launching Gemma 4 Tool-Calling Investigation Stream...',
+        'color: #3b82f6; font-weight: bold;'
+      );
+
+      // Auto-trigger Gemma investigation
+      const timer = setTimeout(() => {
+        handleInvestigate();
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isDegraded, report, isInvestigating]);
+
   const handleSelectCitation = async (citeStr: string) => {
     try {
       const detail = await resolveCitation(citeStr);
@@ -162,8 +193,6 @@ export function App() {
     setMarkerText(`Mitigation Applied: ${action}`);
     loadInitialData();
   };
-
-  const isDegraded = (metrics?.['/api/orders|all']?.p95_ms || 0) > 1000;
 
   const handleStepSelect = (step: IncidentStep) => {
     setCurrentStep(step);

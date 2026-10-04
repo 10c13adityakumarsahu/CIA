@@ -112,51 +112,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         </span>
       </div>
 
-      {/* Scenario Triggers Card */}
-      <div className="p-3 border-b border-slate-100 bg-slate-50/70">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-          Incident Simulation
-        </div>
-        <div className="grid grid-cols-2 gap-1.5 mb-1.5">
-          <button
-            type="button"
-            onClick={() => onSelectScenario('a_exploit')}
-            className={cn(
-              'px-2 py-1.5 rounded-md text-xs font-semibold flex items-center justify-center space-x-1 border transition',
-              activeScenario === 'a_exploit'
-                ? 'bg-red-600 text-white border-red-700 shadow-sm'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
-            )}
-          >
-            <ShieldAlert className="w-3 h-3 text-red-500 shrink-0" />
-            <span className="truncate">A: Exploit</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onSelectScenario('b_regression')}
-            className={cn(
-              'px-2 py-1.5 rounded-md text-xs font-semibold flex items-center justify-center space-x-1 border transition',
-              activeScenario === 'b_regression'
-                ? 'bg-amber-600 text-white border-amber-700 shadow-sm'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
-            )}
-          >
-            <Cpu className="w-3 h-3 text-amber-500 shrink-0" />
-            <span className="truncate">B: Regression</span>
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={onReset}
-          className="w-full py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 text-[11px] font-medium flex items-center justify-center space-x-1 transition"
-        >
-          <RotateCcw className="w-3 h-3 text-slate-400" />
-          <span>Reset Environment</span>
-        </button>
-      </div>
-
       {/* Main Navigation Items */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1">

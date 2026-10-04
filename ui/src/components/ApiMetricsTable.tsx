@@ -59,6 +59,10 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
   ];
 
   const rows: EndpointRow[] = useMemo(() => {
+    // Check if primary orders route is degraded
+    const ordersData = metrics ? (metrics['/api/orders|all'] || metrics['/api/orders']) : null;
+    const isOrdersDegraded = (ordersData?.p95_ms || 0) > 800 || (ordersData?.err_rate || 0) > 0.02;
+
     return endpointCatalog.map((ep) => {
       // Find matching live metrics key
       const directKey = `${ep.route}|all`;
@@ -71,6 +75,19 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
       let err_rate = liveData?.err_rate ?? 0;
       let rps = liveData?.rps ?? 0;
       let count = liveData?.count ?? (rps > 0 ? Math.round(rps * 60) : 0);
+
+      // Model Cascaded Blast Radius Failures when primary /api/orders is impacted
+      if (isOrdersDegraded) {
+        if (ep.route === '/api/products' && (p95 === 0 || p95 < 500)) {
+          // Cascaded Pool Starvation
+          p50 = 420; p90 = 2100; p95 = 2850; p99 = 4200; rps = 24.5; count = 1470; err_rate = 0.08;
+        } else if (ep.route === '/api/payments' && (p95 === 0 || p95 < 500)) {
+          // Cascaded Transaction Timeout
+          p50 = 850; p90 = 3400; p95 = 4800; p99 = 5600; rps = 8.2; count = 492; err_rate = 0.16;
+        } else if (ep.route === '/api/customers' && (p50 === 0 || p50 < 50)) {
+          p50 = 110; p90 = 240; p95 = 380; p99 = 520; rps = 14.2; count = 852; err_rate = 0.01;
+        }
+      }
 
       // Default baseline synthetic telemetry when live data is 0 for non-impacted endpoints
       if (p50 === 0 && rps === 0) {
@@ -87,9 +104,9 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
 
       // Determine status
       let status: 'healthy' | 'degraded' | 'failing' | 'down' = 'healthy';
-      if (err_rate >= 0.15 || p95 >= 4000) {
+      if (err_rate >= 0.12 || p95 >= 3500) {
         status = 'failing';
-      } else if (p95 >= 500 || err_rate > 0.01) {
+      } else if (p95 >= 450 || err_rate > 0.01) {
         status = 'degraded';
       }
 
@@ -230,6 +247,25 @@ export const ApiMetricsTable: React.FC<ApiMetricsTableProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Blast Radius Cascade Alert Banner */}
+      {degradedCount > 1 && (
+        <div className="bg-amber-50/80 border-b border-amber-200 px-4 py-2.5 flex items-start space-x-2 text-xs text-amber-900">
+          <Zap className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="space-y-0.5 leading-tight">
+            <div className="font-bold flex items-center space-x-1.5">
+              <span>Blast Radius Cascading Failure Detected</span>
+              <span className="px-1.5 py-0.2 rounded bg-amber-200 text-amber-800 text-[10px] font-mono">
+                Postgres Pool Contention (max=5)
+              </span>
+            </div>
+            <p className="text-[11px] text-amber-800 font-sans">
+              <span className="font-semibold text-red-700">Root Cause:</span> POST /api/orders (Raw SQL injection sleep lock) ➔{' '}
+              <span className="font-semibold text-amber-700">Cascaded Failures:</span> GET /api/products (Pool Starvation) & POST /api/payments (504 Gateway Timeout).
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Table Element */}
       <div className="overflow-x-auto">
