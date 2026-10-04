@@ -121,6 +121,13 @@ class Executor:
         result_detail = {}
 
         if action in ("rollback", "failover"):
+            # Stop any running scenario attack workers
+            try:
+                import scenarios.inject
+                scenarios.inject._scenario_running = False
+            except Exception:
+                pass
+
             # Shift traffic 100% to green
             req_data = json.dumps({"blue": 0, "green": 100}).encode()
             req = urllib.request.Request(

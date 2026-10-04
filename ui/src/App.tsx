@@ -230,32 +230,95 @@ export function App() {
         onExportReport={() => setIsExportOpen(true)}
       />
 
-      {/* High-Contrast Incident Alert Banner */}
-      {isDegraded && (
-        <div className="bg-black text-white px-6 py-2.5 flex items-center justify-between border-b border-zinc-800 shadow-md shrink-0">
-          <div className="flex items-center space-x-3">
-            <span className="flex h-2.5 w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+      {/* Interactive Guided Incident Journey Bar */}
+      <div className="bg-white border-b border-zinc-200 px-6 py-2.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-xs shrink-0 select-none">
+        <div className="flex items-center space-x-3">
+          {/* Phase Pill */}
+          <div className="flex items-center space-x-2">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-bold">
+              WORKFLOW PHASE:
             </span>
-            <div className="flex items-center space-x-2 text-xs">
-              <span className="font-bold tracking-wide uppercase text-red-400">Incident Alert:</span>
-              <span className="text-zinc-200">
-                Whitebox Attack Active — Latency Surge & DB Pool Contention on <code className="font-mono bg-zinc-800 px-1.5 py-0.5 rounded text-white">/api/orders</code> (Docker container <code className="font-mono bg-zinc-800 px-1.5 py-0.5 rounded text-white">:8001</code>)
+            {state?.weights?.green === 100 ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold bg-black text-white">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mr-1.5" />
+                4. RECOVERED (v1.4.0 LKG Active)
               </span>
-            </div>
+            ) : report ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold bg-black text-white">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 mr-1.5" />
+                3. RCA SYNTHESIZED (CWE-89 SQLi)
+              </span>
+            ) : isDegraded ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold bg-black text-white">
+                <span className="w-2 h-2 rounded-full bg-red-500 mr-1.5 animate-pulse" />
+                2. ATTACK ACTIVE (Pool Starvation)
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-zinc-100 text-zinc-800 border border-zinc-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5" />
+                1. SYSTEM NOMINAL (v1.5.0 Current)
+              </span>
+            )}
           </div>
 
-          <button
-            type="button"
-            onClick={handleScrollToRca}
-            className="px-3.5 py-1 bg-white text-black hover:bg-zinc-100 rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
-          >
-            <span>View RCA & Gemma Fixes</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="h-4 w-px bg-zinc-200 hidden sm:block" />
+
+          {/* Context Guidance Message */}
+          <div className="text-xs text-zinc-600 hidden md:block">
+            {state?.weights?.green === 100 ? (
+              <span>Safe failover verified. Gateway is routing 100% traffic to stable LKG. Latency &lt; 20ms.</span>
+            ) : report ? (
+              <span>Root cause confirmed in code diff: f-string SQLi. Safe target v1.4.0 verified.</span>
+            ) : isDegraded ? (
+              <span className="text-zinc-900 font-semibold">Whitebox SQLi holding worker locks in Docker container :8001. Multiple routes degraded.</span>
+            ) : (
+              <span>Gateway running normally. Ready to test autonomous incident investigation.</span>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* Primary Action Button for Current Phase */}
+        <div className="flex items-center space-x-2">
+          {state?.weights?.green === 100 ? (
+            <button
+              type="button"
+              onClick={handleReset}
+              className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset to Baseline</span>
+            </button>
+          ) : report ? (
+            <button
+              type="button"
+              onClick={handleScrollToRca}
+              className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+            >
+              <span>Inspect Code Diff & Rollback</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          ) : isDegraded ? (
+            <button
+              type="button"
+              onClick={handleInvestigate}
+              disabled={isInvestigating}
+              className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+            >
+              <Sparkles className={cn('w-3.5 h-3.5', isInvestigating && 'animate-spin')} />
+              <span>{isInvestigating ? 'Gemma Investigating...' : 'Analyze with Gemma 4'}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleSelectScenario('a_exploit')}
+              className="px-3.5 py-1.5 bg-black hover:bg-zinc-800 text-white rounded text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer shadow-xs"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <span>Initiate Whitebox Attack</span>
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Error Notification Banner */}
       {errorBanner && (
