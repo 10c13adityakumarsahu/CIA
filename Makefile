@@ -117,10 +117,10 @@ check-s4:
 	assert len(version_contains(['N+1'], '1.5.0').get('nodes', [])) == 0, 'N+1 should not be in graph'; \
 	print('OK: Stage 4 Neo4j graph queries verified!')"
 
-# S5: culprit-api /api/state returns 200.
+# S5: culprit tools, preconditions, verifier, executor unit tests.
 check-s5:
-	@echo "--- check-s5: culprit-api health ---"
-	@curl -sf http://localhost:9000/api/state && echo OK || (echo FAIL && exit 1)
+	@echo "--- check-s5: culprit tools, verifier, preconditions & executor ---"
+	@python -m pytest tests/test_stage5.py -v && echo OK
 
 # S6: scenario a_exploit produces verdict=exploit.
 check-s6:
