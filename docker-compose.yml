@@ -1,0 +1,131 @@
+# ---------------------------------------------------------------------------
+# CULPRIT – docker-compose.yml
+# Stage 0: infrastructure services only.
+# App services (target_app, gateway, loadgen, culprit-api, ui) are commented
+# out and will be uncommented in subsequent stages.
+# ---------------------------------------------------------------------------
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+
+  # ── Infrastructure ─────────────────────────────────────────────────────────
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-culprit}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-culprit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    logging: *default-logging
+
+  neo4j:
+    image: neo4j:5-community
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-none}
+    ports:
+      - "7474:7474"   # HTTP browser
+      - "7687:7687"   # Bolt
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    logging: *default-logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    logging: *default-logging
+
+  registry:
+    image: registry:2
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry_data:/var/lib/registry
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5000/v2/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    logging: *default-logging
+
+  # ── Application services (Stage 1+) ────────────────────────────────────────
+
+  # blue:          # target_app v1.5.0  :8001  (Stage 1)
+  #   image: localhost:5000/shop:1.5.0
+  #   depends_on:
+  #     db: { condition: service_healthy }
+  #   ports: ["8001:8000"]
+
+  # green:         # target_app v1.4.0  :8002  (Stage 1)
+  #   image: localhost:5000/shop:1.4.0
+  #   depends_on:
+  #     db: { condition: service_healthy }
+  #   ports: ["8002:8000"]
+
+  # gateway:       # weighted proxy + JSONL logger  :8080  (Stage 2)
+  #   build: ./gateway
+  #   depends_on:
+  #     blue: { condition: service_healthy }
+  #     green: { condition: service_healthy }
+  #     redis: { condition: service_healthy }
+  #   ports: ["8080:8080"]
+
+  # loadgen:       # steady traffic generator  (Stage 2)
+  #   build: ./loadgen
+  #   depends_on:
+  #     gateway: { condition: service_healthy }
+
+  # culprit-api:   # culprit backend  :9000  (Stage 5)
+  #   build: ./culprit
+  #   depends_on:
+  #     db: { condition: service_healthy }
+  #     neo4j: { condition: service_healthy }
+  #     redis: { condition: service_healthy }
+  #   ports: ["9000:9000"]
+  #   env_file: .env
+
+  # ui:            # Vite+React frontend  :5173  (Stage 8)
+  #   build: ./ui
+  #   depends_on:
+  #     culprit-api: { condition: service_healthy }
+  #   ports: ["5173:5173"]
+
+volumes:
+  pg_data:
+  neo4j_data:
+  redis_data:
+  registry_data:
